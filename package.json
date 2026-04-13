@@ -1,0 +1,50 @@
+{
+  "name": "apk-archeologist",
+  "version": "0.1.0",
+  "description": "CLI tool for mobile game preservation — analyze, decompile, and scaffold mock servers from APKs",
+  "type": "module",
+  "bin": {
+    "apk-archeologist": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "dev": "tsx src/index.ts",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "apk",
+    "game-preservation",
+    "reverse-engineering",
+    "decompilation",
+    "mock-server",
+    "archival",
+    "mobile-game",
+    "unity",
+    "mitm"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "glob": "^10.0.0",
+    "handlebars": "^4.7.0",
+    "ora": "^8.0.0",
+    "xml2js": "^0.6.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.0",
+    "@types/node": "^20.0.0",
+    "@types/xml2js": "^0.4.14",
+    "eslint": "^9.0.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}
