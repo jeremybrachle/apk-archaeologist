@@ -11,7 +11,9 @@
     "dev": "tsx src/index.ts",
     "test": "vitest",
     "lint": "eslint src/",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "demo": "bash demo/run-demo.sh",
+    "demo:web": "npx serve web -p 3000 --no-clipboard"
   },
   "keywords": [
     "apk",

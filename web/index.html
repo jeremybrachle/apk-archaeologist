@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino Dash — Side by Side Comparison</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f23;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+    min-height: 100vh;
+  }
+
+  header {
+    text-align: center;
+    padding: 20px 20px 10px;
+  }
+  header h1 {
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+  }
+  header .tagline {
+    color: #a78bfa;
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 12px 0;
+  }
+  .controls button {
+    background: #1e1e3a;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .controls button:hover { background: #2a2a4a; border-color: #a78bfa; }
+  .controls button.active { border-color: #a78bfa; background: #2a2a4a; box-shadow: 0 0 8px rgba(167,139,250,0.3); }
+
+  .comparison {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 20px 20px;
+    flex-wrap: wrap;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .panel .label {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    padding: 4px 14px;
+    border-radius: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+  .panel.original .label { background: #166534; color: #4ade80; }
+  .panel.reconstructed .label { background: #78350f; color: #fbbf24; }
+
+  iframe {
+    border: none;
+    border-radius: 8px;
+    width: 800px;
+    height: 520px;
+    background: #1a1a2e;
+  }
+
+  .diff-table {
+    max-width: 900px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+  .diff-table th, .diff-table td {
+    padding: 8px 14px;
+    border: 1px solid #333;
+    text-align: left;
+  }
+  .diff-table th { background: #1e1e3a; color: #a78bfa; }
+  .diff-table .original-val { color: #4ade80; }
+  .diff-table .recon-val { color: #fbbf24; }
+  .diff-table .gap { color: #ef4444; font-style: italic; }
+
+  footer {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+    font-size: 0.75rem;
+    font-style: italic;
+  }
+
+  @media (max-width: 1700px) {
+    iframe { width: 700px; height: 470px; }
+  }
+  @media (max-width: 1500px) {
+    iframe { width: 600px; height: 440px; }
+  }
+  @media (max-width: 1300px) {
+    .comparison { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#129430; Dino Dash: Original vs Reconstructed</h1>
+  <div class="tagline">"Your scientists were so preoccupied with whether or not they could decompile it..."</div>
+</header>
+
+<div class="controls">
+  <button id="btnBoth" class="active" onclick="showView('both')">Side by Side</button>
+  <button id="btnOriginal" onclick="showView('original')">Original Only</button>
+  <button id="btnRecon" onclick="showView('reconstructed')">Reconstructed Only</button>
+  <button id="btnDiffs" onclick="showView('diffs')">Difference Table</button>
+</div>
+
+<div class="comparison" id="comparison">
+  <div class="panel original" id="panelOriginal">
+    <div class="label">&#9654; ORIGINAL</div>
+    <iframe src="original/index.html"></iframe>
+  </div>
+  <div class="panel reconstructed" id="panelRecon">
+    <div class="label">&#9888; AI RECONSTRUCTED</div>
+    <iframe src="reconstructed/index.html"></iframe>
+  </div>
+</div>
+
+<div id="diffSection" style="display:none; padding: 20px;">
+  <table class="diff-table">
+    <tr>
+      <th>Feature</th>
+      <th>Original</th>
+      <th>Reconstructed</th>
+      <th>Gap Type</th>
+    </tr>
+    <tr>
+      <td>Dino body shape</td>
+      <td class="original-val">Rounded (radius 8)</td>
+      <td class="recon-val">Angular (radius 3)</td>
+      <td class="gap">Constant swap — AI couldn't map which literal was which</td>
+    </tr>
+    <tr>
+      <td>Squash &amp; stretch</td>
+      <td class="original-val">Subtle (±15% / ±12%)</td>
+      <td class="recon-val">Extreme (±35% / ±30%)</td>
+      <td class="gap">Obfuscated multiplier — AI doubled the value</td>
+    </tr>
+    <tr>
+      <td>Dino eyes</td>
+      <td class="original-val">One eye (side view), normal size</td>
+      <td class="recon-val">Two eyes (front view), bug-eyed</td>
+      <td class="gap">AI inferred bilateral symmetry from single eye code</td>
+    </tr>
+    <tr>
+      <td>Legs</td>
+      <td class="original-val">2 legs, proper thickness</td>
+      <td class="recon-val">3 thin legs (frog tripod)</td>
+      <td class="gap">AI merged animation frames → thought 3 simultaneous legs</td>
+    </tr>
+    <tr>
+      <td>Tail direction</td>
+      <td class="original-val">Curves down at speed</td>
+      <td class="recon-val">Curves UP at speed</td>
+      <td class="gap">Sign flip in obfuscated Pair return value</td>
+    </tr>
+    <tr>
+      <td>Stitch marks</td>
+      <td class="original-val">None</td>
+      <td class="recon-val">Purple diagonal lines on body</td>
+      <td class="gap">Visual indicator of code fragments stitched together</td>
+    </tr>
+    <tr>
+      <td>Ground rocks</td>
+      <td class="original-val">Sparse, small (mod 7, base 1px)</td>
+      <td class="recon-val">Dense, oversized (mod 5, base 2px)</td>
+      <td class="gap">Hash modulo and base offset guessed wrong</td>
+    </tr>
+    <tr>
+      <td>Cloud shapes</td>
+      <td class="original-val">Rounded (20px radius)</td>
+      <td class="recon-val">Square rectangles</td>
+      <td class="gap">Lost corner radius parameter in obfuscation</td>
+    </tr>
+    <tr>
+      <td>Bird wing speed</td>
+      <td class="original-val">Normal flap rate</td>
+      <td class="recon-val">2x flap speed</td>
+      <td class="gap">Scroll divisor halved (10 → 5)</td>
+    </tr>
+    <tr>
+      <td>Cactus arms</td>
+      <td class="original-val">Asymmetric (different heights)</td>
+      <td class="recon-val">Symmetric (same height)</td>
+      <td class="gap">AI assumed mirror symmetry</td>
+    </tr>
+    <tr>
+      <td>Score speed</td>
+      <td class="original-val">+1 every 0.1s</td>
+      <td class="recon-val">+1 every 0.12s (~17% slower)</td>
+      <td class="gap">Timer constant guessed from nearby float literals</td>
+    </tr>
+    <tr>
+      <td>Bird threshold</td>
+      <td class="original-val">Appear after score 50</td>
+      <td class="recon-val">Appear after score 30</td>
+      <td class="gap">AI picked wrong integer literal for threshold</td>
+    </tr>
+    <tr>
+      <td>Dino color</td>
+      <td class="original-val">#2D8B46 (forest green)</td>
+      <td class="recon-val">#358B52 (teal-shifted)</td>
+      <td class="gap">Hex string partially corrupted in decompiled output</td>
+    </tr>
+  </table>
+</div>
+
+<footer>
+  Life, uh, finds a way. &nbsp;&bull;&nbsp; APK Archeologist Demo
+</footer>
+
+<script>
+function showView(view) {
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+
+  const orig = document.getElementById('panelOriginal');
+  const recon = document.getElementById('panelRecon');
+  const comp = document.getElementById('comparison');
+  const diff = document.getElementById('diffSection');
+
+  orig.style.display = 'flex';
+  recon.style.display = 'flex';
+  comp.style.display = 'flex';
+  diff.style.display = 'none';
+
+  if (view === 'both') {
+    document.getElementById('btnBoth').classList.add('active');
+  } else if (view === 'original') {
+    recon.style.display = 'none';
+    document.getElementById('btnOriginal').classList.add('active');
+  } else if (view === 'reconstructed') {
+    orig.style.display = 'none';
+    document.getElementById('btnRecon').classList.add('active');
+  } else if (view === 'diffs') {
+    comp.style.display = 'none';
+    diff.style.display = 'block';
+    document.getElementById('btnDiffs').classList.add('active');
+  }
+}
+</script>
+</body>
+</html>

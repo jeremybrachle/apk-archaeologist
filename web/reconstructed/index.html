@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino Dash — AI Reconstructed</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
+  h1 { color: #e0e0e0; margin-bottom: 4px; font-size: 1.3rem; }
+  .badge { color: #f59e0b; font-size: 0.8rem; margin-bottom: 4px; letter-spacing: 1px; }
+  .sub { color: #888; font-size: 0.65rem; margin-bottom: 12px; font-style: italic; }
+  canvas { border: 2px solid #f59e0b; border-radius: 6px; cursor: pointer; image-rendering: pixelated; }
+  .hint { color: #888; font-size: 0.75rem; margin-top: 8px; }
+  .legend { color: #aaa; font-size: 0.7rem; margin-top: 6px; max-width: 800px; text-align: center; line-height: 1.6; }
+  .legend span.frog { color: #a78bfa; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>Dino Dash</h1>
+<div class="badge">&#9888; AI RECONSTRUCTED</div>
+<div class="sub">Decompiled &rarr; obfuscated methods inferred &rarr; gaps filled with frog DNA</div>
+<canvas id="game" width="800" height="400"></canvas>
+<div class="hint">Click / Tap / Space to jump</div>
+<div class="legend">
+  <span class="frog">Purple highlights</span> = AI-inferred code that wasn't in the decompiled output.
+  The AI guessed the shape, but the amphibian origins are... visible.
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// Dino Dash — AI RECONSTRUCTED VERSION
+//
+// This is what happens when you decompile an APK,
+// lose the helper classes to ProGuard obfuscation,
+// and let an AI fill in the gaps.
+//
+// Everything marked [FROG DNA] is where the AI had to guess.
+// The game runs. The game plays. But the dino is... different.
+// ═══════════════════════════════════════════════════════
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// ── Constants (these survived decompilation fine) ──
+const START_SPEED = 300;
+const MAX_SPEED = 800;
+const SPEED_INCREMENT = 8;
+const GRAVITY = 2200;
+const JUMP_VELOCITY = -850;
+const MIN_SPAWN = 0.8;
+const MAX_SPAWN = 2.2;
+
+// ═══════════════════════════════════════════════════════
+// [FROG DNA] The AI reconstructed these from obfuscated
+// single-letter classes (a, b, c, d, e). It got the
+// shapes *roughly* right but the values are off.
+// ═══════════════════════════════════════════════════════
+
+// [FROG DNA] Originally: DinoAnimator.computeSquashX/Y
+// The AI found references to "velocity" and "1.0 + t * <number>"
+// but guessed the multiplier wrong — too aggressive
+function squashX(vy, maxV) {
+  const t = Math.max(-1, Math.min(1, vy / maxV));
+  return 1 + t * 0.35;  // WRONG: original was 0.15 — dino squashes 2x too much
+}
+function squashY(vy, maxV) {
+  const t = Math.max(-1, Math.min(1, vy / maxV));
+  return 1 - t * 0.30;  // WRONG: original was 0.12 — too stretchy
+}
+
+// [FROG DNA] Originally: TailRenderer.computeTailCurve
+// The AI saw a Pair<Float,Float> return and "sweep" variable
+// but reversed the Y direction — tail goes UP instead of curving down
+function tailCurve(speed, maxSpeed) {
+  const sweep = Math.max(0, Math.min(1, speed / maxSpeed));
+  return { dx: -12 - sweep * 10, dy: 5 - sweep * 8 };  // WRONG: dy flipped sign
+}
+
+// [FROG DNA] Originally: GroundDecorator
+// The AI found the hash constants (0x5F3759DF) but guessed
+// the modulo wrong — rocks appear at different positions
+function hasRockAt(x) {
+  const hash = ((x * 7.3) | 0) ^ 0x5F3759DF;
+  return (((hash % 5) + 5) % 5) === 0;  // WRONG: original was % 7 — more rocks than intended
+}
+function rockHeight(x) {
+  const hash = ((x * 13.7) | 0) ^ (0xDEADBEEF | 0);
+  return 2 + Math.max(0, Math.min(3, ((hash % 4) + 4) % 4));  // WRONG: base is 2 not 1 — rocks too big
+}
+
+// [FROG DNA] Originally: VisualConfig constants
+// The AI found numeric literals in the decompiled code but
+// couldn't tell which constant was which — some are swapped
+const DINO_BODY_RADIUS = 3;    // WRONG: original 8 — dino is more angular
+const DINO_EYE_RADIUS = 8;     // WRONG: original 6 — eye is too big (bug-eyed frog)
+const DINO_PUPIL_RADIUS = 4;   // WRONG: original 3 — pupil too big
+const DINO_LEG_STROKE = 4;     // WRONG: original 6 — spindle legs
+const EYE_OFFSET_X = -18;      // WRONG: original -12 — eye too far back
+const EYE_OFFSET_Y = 10;       // WRONG: original 14 — eye too high
+
+// ── Colors ──
+// The AI recovered hex strings but some got corrupted in decompilation
+const COLORS = {
+  bg: '#F7F1E3',
+  ground: '#6D5D4B',
+  groundLine: '#5C4E3C',
+  dino: '#358B52',          // [FROG DNA] slightly different green — more teal
+  dinoLeg: '#2A6B3A',       // [FROG DNA] leg color slightly off
+  dinoTail: '#24753A',
+  cactus: '#4B8A4B',        // [FROG DNA] cacti are lighter — less menacing
+  bird: '#8B4513',
+  cloud: '#DDDDDD',
+  cloudFar: '#EEEEEE',
+  score: '#333333',
+  gameOver: '#CC0000',
+  subtitle: '#666666',
+  frogDNA: 'rgba(167, 139, 250, 0.35)',  // purple highlight for inferred parts
+  stitch: 'rgba(167, 139, 250, 0.6)',    // stitch marks
+};
+
+// ── State ──
+let state = createState();
+
+function createState() {
+  return {
+    dino: { x: 80, y: 0, w: 50, h: 60, vy: 0, onGround: true },
+    obstacles: [],
+    clouds: [],
+    score: 0,
+    highScore: 0,
+    gameOver: false,
+    groundY: canvas.height * 0.75,
+    scroll: 0,
+    speed: START_SPEED,
+    spawnTimer: 1.5,
+    cloudTimer: 0.5,
+    scoreTimer: 0,
+  };
+}
+
+function init() {
+  state.dino.y = state.groundY - state.dino.h;
+  state.dino.x = canvas.width * 0.1;
+}
+
+// ── Update (game logic survived decompilation mostly intact) ──
+function update(dt) {
+  if (state.gameOver) return;
+  const d = state.dino;
+
+  if (!d.onGround) {
+    d.vy += GRAVITY * dt;
+    d.y += d.vy * dt;
+    const ground = state.groundY - d.h;
+    if (d.y >= ground) { d.y = ground; d.vy = 0; d.onGround = true; }
+  }
+
+  state.obstacles = state.obstacles.filter(o => o.x + o.w > -50);
+  for (const o of state.obstacles) o.x -= state.speed * dt;
+
+  state.spawnTimer -= dt;
+  if (state.spawnTimer <= 0) {
+    spawnObstacle();
+    state.spawnTimer = MIN_SPAWN + Math.random() * (MAX_SPAWN - MIN_SPAWN);
+  }
+
+  state.clouds = state.clouds.filter(c => c.x + c.w > 0);
+  state.cloudTimer -= dt;
+  if (state.cloudTimer <= 0) {
+    state.clouds.push({
+      x: canvas.width + 10,
+      y: 30 + Math.random() * state.groundY * 0.4,
+      w: 80, h: 30,
+      spd: 20 + Math.random() * 40
+    });
+    state.cloudTimer = 2 + Math.random() * 4;
+  }
+  for (const c of state.clouds) c.x -= c.spd * dt;
+
+  // [FROG DNA] Score timing — AI guessed 0.12 instead of 0.1
+  // Score increments ~17% slower than the original
+  state.scoreTimer += dt;
+  if (state.scoreTimer >= 0.12) {
+    state.score++;
+    state.scoreTimer -= 0.12;
+    if (state.score % 100 === 0) {
+      state.speed = Math.min(state.speed + SPEED_INCREMENT * 10, MAX_SPEED);
+    }
+  }
+
+  const dx = d.x + 5, dy = d.y + 5, dw = d.w - 10, dh = d.h - 10;
+  for (const o of state.obstacles) {
+    const ox = o.x + 3, oy = o.y + 3, ow = o.w - 6, oh = o.h - 6;
+    if (dx < ox + ow && dx + dw > ox && dy < oy + oh && dy + dh > oy) {
+      state.gameOver = true;
+      state.highScore = Math.max(state.highScore, state.score);
+      return;
+    }
+  }
+
+  state.scroll += state.speed * dt;
+}
+
+function spawnObstacle() {
+  // [FROG DNA] Bird threshold — AI guessed score > 30 instead of > 50
+  // Birds appear earlier than in the original
+  const isBird = state.score > 30 && Math.random() > 0.7;
+  if (isBird) {
+    state.obstacles.push({
+      x: canvas.width + 20,
+      y: state.groundY - 80 - Math.random() * 60,
+      w: 40, h: 25, type: 'bird'
+    });
+  } else {
+    const h = 40 + Math.random() * 30;
+    state.obstacles.push({
+      x: canvas.width + 20,
+      y: state.groundY - h,
+      w: 25 + Math.random() * 15, h, type: 'cactus'
+    });
+  }
+}
+
+// ── Draw ──
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  const d = state.dino;
+  const gY = state.groundY;
+
+  // bg
+  ctx.fillStyle = COLORS.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // ground
+  ctx.fillStyle = COLORS.ground;
+  ctx.fillRect(0, gY, W, H - gY);
+
+  // ground lines
+  ctx.strokeStyle = COLORS.groundLine;
+  ctx.lineWidth = 2;
+  let lx = state.scroll % 40;
+  while (lx < W) {
+    ctx.beginPath(); ctx.moveTo(lx, gY + 4); ctx.lineTo(lx + 15, gY + 4); ctx.stroke();
+    lx += 40;
+  }
+
+  // [FROG DNA] Ground rocks — too many and too big
+  ctx.fillStyle = COLORS.groundLine;
+  let rx = state.scroll % 60;
+  while (rx < W) {
+    const worldX = rx + state.scroll;
+    if (hasRockAt(worldX)) {
+      const rh = rockHeight(worldX);
+      ctx.beginPath(); ctx.arc(rx, gY + 8 + rh, rh, 0, Math.PI * 2); ctx.fill();
+    }
+    rx += 20;
+  }
+
+  // clouds
+  for (const c of state.clouds) {
+    const depth = c.y < gY * 0.25 ? 2 : 1;
+    ctx.fillStyle = depth === 2 ? COLORS.cloudFar : COLORS.cloud;
+    // [FROG DNA] AI used square clouds instead of rounded — lost the radius parameter
+    ctx.fillRect(c.x, c.y, c.w, c.h);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // DINO — The Frankenstein Reconstruction
+  // ═══════════════════════════════════════════════════════
+
+  // [FROG DNA] Squash-stretch is too aggressive — dino wobbles wildly
+  const sx = squashX(d.vy, -JUMP_VELOCITY);
+  const sy = squashY(d.vy, -JUMP_VELOCITY);
+  const dw = d.w * sx, dh = d.h * sy;
+  const ddx = d.x + (d.w - dw) / 2;
+  const ddy = d.y + (d.h - dh);
+
+  // body — more angular (wrong corner radius)
+  ctx.fillStyle = COLORS.dino;
+  roundRect(ddx, ddy, dw, dh, DINO_BODY_RADIUS);
+
+  // [FROG DNA] Stitch marks — visual indicator of reconstructed code
+  // These diagonal lines across the body show where different code
+  // fragments were stitched together by the AI
+  ctx.strokeStyle = COLORS.stitch;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  for (let sy = 0; sy < dh; sy += 12) {
+    ctx.beginPath();
+    ctx.moveTo(ddx + 3, ddy + sy);
+    ctx.lineTo(ddx + dw - 3, ddy + sy + 6);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // [FROG DNA] Frog-DNA highlight glow on the dino body
+  ctx.fillStyle = COLORS.frogDNA;
+  roundRect(ddx, ddy, dw, dh, DINO_BODY_RADIUS);
+
+  // [FROG DNA] Tail goes the wrong direction (sign flip)
+  const tail = tailCurve(state.speed, MAX_SPEED);
+  ctx.strokeStyle = COLORS.dinoTail;
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(ddx, ddy + dh * 0.4);
+  ctx.lineTo(ddx + tail.dx, ddy + dh * 0.4 + tail.dy);
+  ctx.stroke();
+
+  // [FROG DNA] Bug-eyed — eye too big and too far back
+  ctx.fillStyle = '#FFF';
+  ctx.beginPath(); ctx.arc(ddx + dw + EYE_OFFSET_X, ddy + EYE_OFFSET_Y, DINO_EYE_RADIUS, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(ddx + dw + EYE_OFFSET_X + 2, ddy + EYE_OFFSET_Y, DINO_PUPIL_RADIUS, 0, Math.PI * 2); ctx.fill();
+
+  // [FROG DNA] The AI added a SECOND eye on the left side
+  // because it saw "eye" drawing code and inferred bilateral symmetry
+  // The original only had one eye (side view). The AI assumed front view.
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.arc(ddx + 10, ddy + EYE_OFFSET_Y, DINO_EYE_RADIUS * 0.7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath(); ctx.arc(ddx + 12, ddy + EYE_OFFSET_Y, DINO_PUPIL_RADIUS * 0.7, 0, Math.PI * 2); ctx.fill();
+
+  // legs — too thin (wrong stroke width)
+  ctx.strokeStyle = COLORS.dinoLeg;
+  ctx.lineWidth = DINO_LEG_STROKE;
+  ctx.lineCap = 'round';
+  const legTop = ddy + dh;
+  const legCycle = ((state.scroll / 15) | 0) % 2;
+
+  // [FROG DNA] The AI added a THIRD leg — it found three separate
+  // drawLine calls in the decompiled code (2 walking positions + 1 jumping)
+  // and assumed they were all simultaneous legs instead of animation states
+  if (d.onGround) {
+    if (legCycle === 0) {
+      line(ddx + 10, legTop, ddx + 6, legTop + 16);
+      line(ddx + dw / 2, legTop, ddx + dw / 2, legTop + 14);  // EXTRA FROG LEG
+      line(ddx + dw - 20, legTop, ddx + dw - 16, legTop + 16);
+    } else {
+      line(ddx + 10, legTop, ddx + 14, legTop + 16);
+      line(ddx + dw / 2, legTop, ddx + dw / 2 + 2, legTop + 14);  // EXTRA FROG LEG
+      line(ddx + dw - 20, legTop, ddx + dw - 24, legTop + 16);
+    }
+  } else {
+    line(ddx + 10, legTop, ddx + 8, legTop + 12);
+    line(ddx + dw / 2, legTop, ddx + dw / 2, legTop + 10);  // EXTRA FROG LEG
+    line(ddx + dw - 20, legTop, ddx + dw - 18, legTop + 12);
+  }
+
+  // obstacles
+  for (const o of state.obstacles) {
+    if (o.type === 'cactus') {
+      ctx.fillStyle = COLORS.cactus;
+      roundRect(o.x, o.y, o.w, o.h, 4);
+      // [FROG DNA] AI drew arms on BOTH sides symmetrically
+      // Original had asymmetric arms at different heights
+      ctx.fillRect(o.x - 8, o.y + 12, 12, 15);
+      ctx.fillRect(o.x + o.w - 4, o.y + 12, 12, 15);  // same Y as left — wrong
+    } else {
+      ctx.fillStyle = COLORS.bird;
+      roundRect(o.x, o.y, o.w, o.h, 6);
+      // [FROG DNA] Wing flaps at double speed (divisor 5 vs 10)
+      const wingOff = ((state.scroll / 5) | 0) % 2 === 0 ? -10 : 10;
+      ctx.beginPath();
+      ctx.moveTo(o.x + o.w / 2, o.y);
+      ctx.lineTo(o.x + o.w / 2, o.y + wingOff);
+      ctx.strokeStyle = COLORS.bird; ctx.lineWidth = 3; ctx.stroke();
+    }
+  }
+
+  // score
+  ctx.fillStyle = COLORS.score;
+  ctx.font = 'bold 28px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Score: ${state.score}`, 20, 35);
+  ctx.font = 'bold 20px monospace';
+  ctx.fillText(`High: ${state.highScore}`, 20, 62);
+
+  // [FROG DNA] "Reconstructed" watermark
+  ctx.fillStyle = 'rgba(167, 139, 250, 0.15)';
+  ctx.font = '14px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('🧬 AI Reconstructed', W - 10, 20);
+
+  // game over
+  if (state.gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = COLORS.gameOver;
+    ctx.font = 'bold 48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', W / 2, H / 2 - 30);
+    ctx.fillStyle = COLORS.subtitle;
+    ctx.font = '24px monospace';
+    ctx.fillText(`Score: ${state.score}`, W / 2, H / 2 + 10);
+    ctx.fillText('Click to restart', W / 2, H / 2 + 45);
+
+    // [FROG DNA] The AI added an extra line about fidelity
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.7)';
+    ctx.font = '14px monospace';
+    ctx.fillText('⚠ Reconstruction fidelity: 73%', W / 2, H / 2 + 80);
+  }
+}
+
+// ── Helpers ──
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.fill();
+}
+
+function line(x1, y1, x2, y2) {
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+
+// ── Input ──
+function handleInput() {
+  if (state.gameOver) {
+    const hs = state.highScore;
+    state = createState();
+    init();
+    state.highScore = hs;
+  } else if (state.dino.onGround) {
+    state.dino.vy = JUMP_VELOCITY;
+    state.dino.onGround = false;
+  }
+}
+
+canvas.addEventListener('click', handleInput);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(); });
+document.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); handleInput(); } });
+
+// ── Loop ──
+let lastTime = performance.now();
+init();
+
+function loop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

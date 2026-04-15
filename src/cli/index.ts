@@ -4,6 +4,8 @@ import { registerIngestCommand } from './commands/ingest.js';
 import { registerDecompileCommand } from './commands/decompile.js';
 import { registerScanCommand } from './commands/scan.js';
 import { registerReportCommand } from './commands/report.js';
+import { registerReconstructCommand } from './commands/reconstruct.js';
+import { registerCompareCommand } from './commands/compare.js';
 import { setLogLevel, LogLevel } from '../utils/logger.js';
 
 /**
@@ -29,6 +31,8 @@ export function createProgram(): Command {
   registerDecompileCommand(program);
   registerScanCommand(program);
   registerReportCommand(program);
+  registerReconstructCommand(program);
+  registerCompareCommand(program);
 
   return program;
 }

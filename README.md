@@ -1,6 +1,8 @@
 # apk-archeologist
 
-Analyze mobile game APKs for long-term preservation.
+> *"Your scientists were so preoccupied with whether or not they could decompile it, they didn't stop to think if they should."*
+
+Analyze mobile game APKs for long-term preservation. Extract endpoint DNA from compiled amber. Fill in the gaps. Life finds a way.
 
 ## What It Does
 
@@ -24,15 +26,27 @@ a local replacement — so the game can keep running after the original servers 
 ```bash
 npm install -g apk-archeologist
 
-# Analyze an APK
+# Full analysis pipeline
 apk-archeologist analyze ./my-game.apk --output ./results/
 
 # View the report
 cat ./results/analysis/report.md
 
-# Run the generated mock server (future feature)
-cd ./results/mock-server/
-npm install && npm start
+# Reconstruct a buildable project from decompiled sources
+apk-archeologist reconstruct ./results/ -o ./rebuilt/
+
+# Compare original vs reconstructed
+apk-archeologist compare ./original-src ./rebuilt/src/main/java -o comparison.md
+```
+
+## Live Demo
+
+This repo ships with **Dino Dash** — a real playable Android game built specifically to demonstrate the full pipeline. See the [demo walkthrough](demo/README.md) for the complete experience, or just run:
+
+```bash
+bash demo/run-demo.sh    # Linux/macOS/WSL
+# or
+demo\run-demo.ps1        # Windows
 ```
 
 ## Commands
@@ -44,6 +58,8 @@ npm install && npm start
 | `decompile` | Run decompilation tools |
 | `scan` | Search decompiled code for network endpoints |
 | `report` | Generate analysis report |
+| `reconstruct` | Rebuild a project from decompiled sources |
+| `compare` | Compare original vs reconstructed source |
 
 ### Examples
 
@@ -62,6 +78,12 @@ apk-archeologist report ./workdir --format markdown,json
 
 # Skip decompilation (analyze extracted APK contents only)
 apk-archeologist analyze ./game.apk -o ./output --skip-decompile
+
+# Reconstruct from decompiled output
+apk-archeologist reconstruct ./output -o ./rebuilt
+
+# Compare original source against reconstructed
+apk-archeologist compare ./original/src ./rebuilt/src/main/java -o diff.md
 ```
 
 ## Supported Engines
@@ -91,10 +113,12 @@ If a tool is not installed, the corresponding step is skipped with a warning.
 ```
 CLI Entry Point
   │
-  ├── Ingest     → Unpack APK, parse manifest, detect engine
-  ├── Decompile  → Run JADX / AssetRipper / Il2CppDumper
-  ├── Scan       → Regex + pattern matching for URLs and endpoints
-  └── Report     → Generate Markdown + JSON analysis reports
+  ├── Ingest       → Unpack APK, parse manifest, detect engine
+  ├── Decompile    → Run JADX / AssetRipper / Il2CppDumper
+  ├── Scan         → Regex + pattern matching for URLs and endpoints
+  ├── Report       → Generate Markdown + JSON analysis reports
+  ├── Reconstruct  → Rebuild project from decompiled sources
+  └── Compare      → Diff original vs reconstructed side-by-side
 ```
 
 Each pipeline stage reads and writes JSON intermediates to a working directory,
@@ -110,14 +134,26 @@ analysis-output/
 ├── jadx/                  JADX decompiled Java source
 ├── unity/                 AssetRipper output (if Unity)
 ├── il2cpp/                Il2CppDumper output (if IL2CPP)
-└── analysis/
-    ├── report.md          Human-readable analysis report
-    ├── report.json        Machine-readable analysis data
-    ├── endpoints.json     Discovered API endpoints
-    ├── urls.json          All discovered URLs
-    ├── auth-flow.json     Authentication pattern matches
-    └── scan-summary.json  Scan statistics
+├── analysis/
+│   ├── report.md          Human-readable analysis report
+│   ├── report.json        Machine-readable analysis data
+│   ├── endpoints.json     Discovered API endpoints
+│   ├── urls.json          All discovered URLs
+│   ├── auth-flow.json     Authentication pattern matches
+│   └── scan-summary.json  Scan statistics
+└── reconstructed/         Rebuilt project (from reconstruct step)
+    ├── build.gradle.kts   Auto-generated build file
+    ├── reconstruction-meta.json  Fidelity scores and gap analysis
+    └── src/main/java/...  Kotlin source skeletons
 ```
+
+## Sample Game
+
+The `sample-game/` directory contains **Dino Dash** — a Chrome-dino-style runner built in Kotlin. It serves as a controlled test specimen for the full pipeline: build → decompile → analyze → reconstruct → compare.
+
+The game includes realistic API endpoints, JWT auth, session management, leaderboard services, analytics tracking, and a WebSocket connection — giving the scanner plenty to discover.
+
+See [demo/README.md](demo/README.md) for the full walkthrough.
 
 ## Development
 

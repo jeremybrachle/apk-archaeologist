@@ -4,3 +4,16 @@ dist/
 .DS_Store
 Thumbs.db
 HANDOFF-*.md
+
+# Sample game build outputs
+sample-game/.gradle/
+sample-game/app/build/
+sample-game/build/
+sample-game/local.properties
+sample-game/gradle/wrapper/gradle-wrapper.jar
+
+# Demo outputs (generated)
+demo-output/
+demo-reconstructed/
+comparison-report.md
+analysis-output/

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="sand">#F7F1E3</color>
+    <color name="ground">#6D5D4B</color>
+    <color name="dino_green">#2D8B46</color>
+    <color name="cactus_green">#3B7A3B</color>
+    <color name="text_dark">#333333</color>
+    <color name="game_over_red">#CC0000</color>
+</resources>
