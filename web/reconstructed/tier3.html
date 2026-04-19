@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino Dash — Tier 3: Neural Inference</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
+  h1 { color: #e0e0e0; margin-bottom: 4px; font-size: 1.3rem; }
+  .tier-info { font-size: 0.8rem; margin-bottom: 4px; letter-spacing: 1px; }
+  .tier-methods { font-size: 0.65rem; color: #888; margin-bottom: 8px; max-width: 800px; text-align: center; line-height: 1.8; }
+  .tier-methods .tag { display: inline-block; background: #0d0d1a; border: 1px solid #333; padding: 2px 8px; border-radius: 4px; margin: 2px; white-space: nowrap; }
+  canvas { border-radius: 6px; cursor: pointer; image-rendering: pixelated; }
+  .hint { color: #888; font-size: 0.75rem; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h1>Dino Dash</h1>
+<div class="tier-info" id="tier-info"></div>
+<div class="tier-methods" id="tier-methods"></div>
+<canvas id="game" width="800" height="400"></canvas>
+<div class="hint">Click / Tap / Space to jump</div>
+<script>var TIER = 3;</script>
+<script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino Dash — Raw Decompiled</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
+  h1 { color: #e0e0e0; margin-bottom: 4px; font-size: 1.3rem; }
+  .badge { color: #ef4444; font-size: 0.8rem; margin-bottom: 4px; letter-spacing: 1px; }
+  .sub { color: #888; font-size: 0.65rem; margin-bottom: 12px; font-style: italic; max-width: 600px; text-align: center; }
+  canvas { border: 2px solid #ef4444; border-radius: 6px; cursor: pointer; image-rendering: pixelated; }
+  .hint { color: #888; font-size: 0.75rem; margin-top: 8px; }
+  .obf-panel { background: #0d0d1a; border: 1px solid #333; border-radius: 6px; margin-top: 10px; padding: 10px 14px; max-width: 800px; width: 100%; font-family: 'Courier New', monospace; font-size: 0.65rem; color: #666; max-height: 120px; overflow-y: auto; line-height: 1.5; }
+  .obf-panel .kw { color: #c678dd; }
+  .obf-panel .str { color: #98c379; }
+  .obf-panel .num { color: #d19a66; }
+  .obf-panel .cm { color: #5c6370; font-style: italic; }
+  .obf-panel .lost { color: #ef4444; text-decoration: line-through; }
+</style>
+</head>
+<body>
+<h1>Dino Dash</h1>
+<div class="badge">✗ RAW DECOMPILED OUTPUT</div>
+<div class="sub">
+  This is what JADX produces after ProGuard obfuscation. No AI inference.
+  Helper classes (DinoAnimator, TailRenderer, ParticleSystem, DayNightCycle, ComboTracker)
+  were inlined and stripped. Only the main game loop and basic draw calls survived.
+</div>
+<canvas id="game" width="800" height="400"></canvas>
+<div class="hint">Click / Tap / Space to jump</div>
+
+<div class="obf-panel" id="obf-log">
+  <span class="cm">// ── What JADX recovered from classes.dex ──</span><br>
+  <span class="kw">public class</span> a <span class="kw">extends</span> View { <span class="cm">// was: GameView</span><br>
+  &nbsp;&nbsp;<span class="kw">private</span> b f1; <span class="cm">// was: GameEngine engine</span><br>
+  &nbsp;&nbsp;<span class="kw">private float</span> f2 = <span class="num">300.0f</span>; <span class="cm">// START_SPEED survived</span><br>
+  &nbsp;&nbsp;<span class="kw">private float</span> f3 = <span class="num">2200.0f</span>; <span class="cm">// GRAVITY survived</span><br>
+  &nbsp;&nbsp;<span class="kw">private float</span> f4 = <span class="num">-850.0f</span>; <span class="cm">// JUMP_VELOCITY survived</span><br>
+  &nbsp;&nbsp;<span class="lost">// DinoAnimator.kt — STRIPPED (inlined, no class reference)</span><br>
+  &nbsp;&nbsp;<span class="lost">// TailRenderer.kt — STRIPPED (inlined, no class reference)</span><br>
+  &nbsp;&nbsp;<span class="lost">// GroundDecorator.kt — STRIPPED (inlined, methods became a(), b())</span><br>
+  &nbsp;&nbsp;<span class="lost">// ParallaxHelper.kt — STRIPPED entirely</span><br>
+  &nbsp;&nbsp;<span class="lost">// ParticleSystem.kt — STRIPPED entirely</span><br>
+  &nbsp;&nbsp;<span class="lost">// DayNightCycle.kt — STRIPPED (color constants inlined as int literals)</span><br>
+  &nbsp;&nbsp;<span class="lost">// ComboTracker.kt — STRIPPED entirely</span><br>
+  &nbsp;&nbsp;<span class="kw">private void</span> a(<span class="kw">float</span> f) { <span class="cm">// was: update(dt)</span><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// physics loop — mostly intact</span><br>
+  &nbsp;&nbsp;}<br>
+  &nbsp;&nbsp;<span class="kw">private void</span> a(Canvas c) { <span class="cm">// was: onDraw(canvas)</span><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// draw calls — shapes present, constants scrambled</span><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;c.drawRoundRect(f5, f6, f7, f8, <span class="num">???</span>, <span class="num">???</span>, p1); <span class="cm">// body — radius args lost</span><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;c.drawCircle(f9, f10, <span class="num">???</span>, p2); <span class="cm">// eye — which float is radius?</span><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 14 numeric literals found, can't map to named constants</span><br>
+  &nbsp;&nbsp;}<br>
+  }
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// Dino Dash — RAW DECOMPILED OUTPUT
+//
+// This is the absolute minimum that JADX could recover.
+// No AI guessing. No gap-filling. Just what's in the bytecode.
+//
+// What survived:
+//   - Basic game loop (update/draw)
+//   - Gravity, jump velocity, speed constants
+//   - Rectangle and circle draw calls (but constants scrambled)
+//   - Collision detection (coordinate math survived)
+//   - Score incrementing
+//
+// What was LOST (ProGuard inlined or stripped):
+//   - All helper class names (DinoAnimator → anonymous)
+//   - Squash/stretch animation (DinoAnimator inlined, params lost)
+//   - Tail bezier curve (TailRenderer stripped)
+//   - Ground decoration (GroundDecorator hash functions stripped)
+//   - Parallax clouds (ParallaxHelper stripped, only basic cloud remains)
+//   - Particle effects (ParticleSystem stripped entirely)
+//   - Day/night cycle (DayNightCycle stripped, sky colors lost)
+//   - Combo system (ComboTracker stripped entirely)
+//   - Breathing animation, eye blink, spines, belly, nostril, mouth
+//   - Mountain silhouettes, grass tufts
+//   - Bird beak, bird eye, wing rotation (only basic rectangle left)
+//   - Cactus detail lines, asymmetric arms
+//
+// The dino is a plain rectangle. The game "works" but looks nothing
+// like the original.
+// ═══════════════════════════════════════════════════════
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// These numeric literals survived in the bytecode as field initializers
+const f2 = 300;     // START_SPEED
+const f14 = 800;    // MAX_SPEED
+const f15 = 8;      // SPEED_INCREMENT
+const f3 = 2200;    // GRAVITY
+const f4 = -850;    // JUMP_VELOCITY
+
+// These were also present but we can't tell what they were for
+// JADX found: 8, 6, 3, 6, -12, 14, 2, 12, 2, 1.5, 5, 6, 4, 0.15, 0.12
+// They're all numeric literals from VisualConfig — but which is which?
+
+let state = {
+  dino: { x: 80, y: 0, w: 50, h: 60, vy: 0, onGround: true },
+  obstacles: [],
+  clouds: [],
+  score: 0,
+  highScore: 0,
+  gameOver: false,
+  groundY: canvas.height * 0.75,
+  scroll: 0,
+  speed: f2,
+  spawnTimer: 1.5,
+  cloudTimer: 0.5,
+  scoreTimer: 0,
+};
+
+function init() {
+  state.dino.y = state.groundY - state.dino.h;
+  state.dino.x = canvas.width * 0.1;
+}
+
+// update — the physics math survived obfuscation fine
+function update(dt) {
+  if (state.gameOver) return;
+  const d = state.dino;
+
+  if (!d.onGround) {
+    d.vy += f3 * dt;
+    d.y += d.vy * dt;
+    const ground = state.groundY - d.h;
+    if (d.y >= ground) { d.y = ground; d.vy = 0; d.onGround = true; }
+  }
+
+  state.obstacles = state.obstacles.filter(o => o.x + o.w > -50);
+  for (const o of state.obstacles) o.x -= state.speed * dt;
+
+  state.spawnTimer -= dt;
+  if (state.spawnTimer <= 0) {
+    spawnObstacle();
+    state.spawnTimer = 0.8 + Math.random() * 1.4;
+  }
+
+  // clouds — basic, no parallax depth
+  state.clouds = state.clouds.filter(c => c.x + c.w > 0);
+  state.cloudTimer -= dt;
+  if (state.cloudTimer <= 0) {
+    state.clouds.push({ x: canvas.width + 10, y: 30 + Math.random() * 100, w: 80, h: 30, spd: 30 });
+    state.cloudTimer = 3 + Math.random() * 3;
+  }
+  for (const c of state.clouds) c.x -= c.spd * dt;
+
+  state.scoreTimer += dt;
+  if (state.scoreTimer >= 0.1) {
+    state.score++;
+    state.scoreTimer -= 0.1;
+    if (state.score % 100 === 0) {
+      state.speed = Math.min(state.speed + f15 * 10, f14);
+    }
+  }
+
+  const dx = d.x + 5, dy = d.y + 5, dw = d.w - 10, dh = d.h - 10;
+  for (const o of state.obstacles) {
+    const ox = o.x + 3, oy = o.y + 3, ow = o.w - 6, oh = o.h - 6;
+    if (dx < ox + ow && dx + dw > ox && dy < oy + oh && dy + dh > oy) {
+      state.gameOver = true;
+      state.highScore = Math.max(state.highScore, state.score);
+      return;
+    }
+  }
+
+  state.scroll += state.speed * dt;
+}
+
+function spawnObstacle() {
+  // bird threshold — we found "50" and "0.7" in the bytecode but
+  // can't tell if 50 is the score threshold or something else
+  const isBird = state.score > 50 && Math.random() > 0.7;
+  if (isBird) {
+    state.obstacles.push({
+      x: canvas.width + 20,
+      y: state.groundY - 80 - Math.random() * 60,
+      w: 40, h: 25, type: 'bird'
+    });
+  } else {
+    const h = 40 + Math.random() * 30;
+    state.obstacles.push({
+      x: canvas.width + 20,
+      y: state.groundY - h,
+      w: 25 + Math.random() * 15, h, type: 'cactus'
+    });
+  }
+}
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  const d = state.dino;
+  const gY = state.groundY;
+
+  // sky — just a flat color, DayNightCycle was stripped
+  ctx.fillStyle = '#F7F1E3';
+  ctx.fillRect(0, 0, W, H);
+
+  // ground — survived
+  ctx.fillStyle = '#6D5D4B';
+  ctx.fillRect(0, gY, W, H - gY);
+
+  // ground lines — the loop survived but that's it
+  ctx.strokeStyle = '#5C4E3C';
+  ctx.lineWidth = 2;
+  let lx = state.scroll % 40;
+  while (lx < W) {
+    ctx.beginPath(); ctx.moveTo(lx, gY + 4); ctx.lineTo(lx + 15, gY + 4); ctx.stroke();
+    lx += 40;
+  }
+
+  // NO ground rocks — GroundDecorator hash functions were stripped
+  // NO grass tufts — stripped
+  // NO mountains — ParallaxHelper stripped
+
+  // clouds — basic rectangles, no rounded corners, no depth
+  ctx.fillStyle = '#DDDDDD';
+  for (const c of state.clouds) {
+    ctx.fillRect(c.x, c.y, c.w, c.h);
+  }
+
+  // NO particles — ParticleSystem stripped entirely
+
+  // ═══════════════════════════════════════════════════════
+  // DINO — Just a rectangle.
+  // The bytecode has drawRoundRect calls but we can't resolve
+  // which numeric literal was the corner radius.
+  // DinoAnimator was inlined and stripped — no squash/stretch.
+  // ═══════════════════════════════════════════════════════
+
+  // body — plain rectangle (can't map corner radius constant)
+  ctx.fillStyle = '#2D8B46';  // this hex string survived in the constant pool
+  ctx.fillRect(d.x, d.y, d.w, d.h);
+
+  // NO belly patch — stripped
+  // NO spines — stripped
+  // NO breathing — stripped
+
+  // eye — we know there was a drawCircle but can't tell which float was the radius
+  // Using a placeholder size
+  ctx.fillStyle = '#FFF';
+  ctx.beginPath(); ctx.arc(d.x + d.w - 10, d.y + 14, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(d.x + d.w - 8, d.y + 14, 2, 0, Math.PI * 2); ctx.fill();
+
+  // NO second eye
+  // NO nostril — stripped
+  // NO mouth — stripped
+  // NO blink animation — DinoAnimator stripped
+
+  // NO tail — TailRenderer was its own class, ProGuard removed the whole thing
+
+  // legs — the drawLine calls survived but stroke width is unknown
+  ctx.strokeStyle = '#1E6B30';
+  ctx.lineWidth = 3; // guessing
+  ctx.lineCap = 'round';
+  const legTop = d.y + d.h;
+  // no animation cycle — we can see two drawLine calls but can't tell
+  // they were in an if/else for animation frames
+  line(d.x + 10, legTop, d.x + 10, legTop + 14);
+  line(d.x + d.w - 15, legTop, d.x + d.w - 15, legTop + 14);
+
+  // obstacles — basic shapes only
+  for (const o of state.obstacles) {
+    if (o.type === 'cactus') {
+      ctx.fillStyle = '#3B7A3B';
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      // arms — we can see two fillRect calls but can't tell they were arms
+      // the Y coordinates are unknown so we skip them
+    } else {
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      // NO beak — stripped
+      // NO wing rotation — stripped
+      // NO bird eye — stripped
+    }
+  }
+
+  // score
+  ctx.fillStyle = '#333333';
+  ctx.font = 'bold 28px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Score: ${state.score}`, 20, 35);
+  ctx.font = 'bold 20px monospace';
+  ctx.fillText(`High: ${state.highScore}`, 20, 62);
+
+  // NO combo text — ComboTracker stripped
+
+  // game over
+  if (state.gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#CC0000';
+    ctx.font = 'bold 48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', W / 2, H / 2 - 30);
+    ctx.fillStyle = '#666666';
+    ctx.font = '24px monospace';
+    ctx.fillText(`Score: ${state.score}`, W / 2, H / 2 + 10);
+    ctx.fillText('Click to restart', W / 2, H / 2 + 45);
+  }
+}
+
+function line(x1, y1, x2, y2) {
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+
+function handleInput() {
+  if (state.gameOver) {
+    const hs = state.highScore;
+    state = {
+      dino: { x: 80, y: 0, w: 50, h: 60, vy: 0, onGround: true },
+      obstacles: [], clouds: [], score: 0, highScore: hs,
+      gameOver: false, groundY: canvas.height * 0.75, scroll: 0,
+      speed: f2, spawnTimer: 1.5, cloudTimer: 0.5, scoreTimer: 0,
+    };
+    init();
+  } else if (state.dino.onGround) {
+    state.dino.vy = f4;
+    state.dino.onGround = false;
+  }
+}
+
+canvas.addEventListener('click', handleInput);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(); });
+document.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); handleInput(); } });
+
+let lastTime = performance.now();
+init();
+
+function loop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

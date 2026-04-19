@@ -1,36 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dino Dash — AI Reconstructed</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
-  h1 { color: #e0e0e0; margin-bottom: 4px; font-size: 1.3rem; }
-  .tier-info { font-size: 0.8rem; margin-bottom: 4px; letter-spacing: 1px; }
-  .tier-methods { font-size: 0.65rem; color: #888; margin-bottom: 8px; max-width: 800px; text-align: center; line-height: 1.8; }
-  .tier-methods .tag { display: inline-block; background: #0d0d1a; border: 1px solid #333; padding: 2px 8px; border-radius: 4px; margin: 2px; white-space: nowrap; }
-  canvas { border-radius: 6px; cursor: pointer; image-rendering: pixelated; }
-  .hint { color: #888; font-size: 0.75rem; margin-top: 8px; }
-</style>
-</head>
-<body>
-<h1>Dino Dash</h1>
-<div class="tier-info" id="tier-info"></div>
-<div class="tier-methods" id="tier-methods"></div>
-<canvas id="game" width="800" height="400"></canvas>
-<div class="hint">Click / Tap / Space to jump</div>
-
-<script>
+// Expects: var TIER (1, 2, or 3) to be defined before this script loads.
 var canvas = document.getElementById('game');
 var ctx = canvas.getContext('2d');
 
-var _tierParam = new URLSearchParams(window.location.search).get('tier');
-var TIER = _tierParam !== null ? Math.max(1, Math.min(3, parseInt(_tierParam))) : 3;
-if (isNaN(TIER)) TIER = 3;
-
-// ═══════════════════════════════════════════════════════
 // Tier metadata — each tier represents a different depth
 // of AI analysis applied to the decompiled bytecode.
 // Higher tier = more compute = closer to original.
@@ -687,6 +658,3 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-</script>
-</body>
-</html>

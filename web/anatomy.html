@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APK Archeologist — Pipeline Anatomy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f23;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 30px 20px 60px;
+  }
+
+  header { text-align: center; margin-bottom: 30px; }
+  header h1 { font-size: 1.5rem; margin-bottom: 6px; }
+  header .tagline { color: #a78bfa; font-style: italic; font-size: 0.82rem; }
+  header .back { display: inline-block; margin-top: 10px; color: #888; font-size: 0.78rem; text-decoration: none; border: 1px solid #444; padding: 4px 14px; border-radius: 6px; }
+  header .back:hover { border-color: #a78bfa; color: #e0e0e0; }
+
+  /* ── 5-Stage Pipeline ── */
+  .pipeline-overview {
+    display: flex; align-items: stretch; justify-content: center; gap: 0;
+    margin: 0 auto 40px; max-width: 1200px; flex-wrap: wrap;
+  }
+  .stage-card {
+    flex: 1 1 180px; max-width: 220px; min-width: 160px;
+    background: #1a1a2e; border: 2px solid #333; border-radius: 10px;
+    padding: 16px 14px; text-align: center; position: relative;
+  }
+  .stage-card .stage-num {
+    width: 28px; height: 28px; border-radius: 50%; display: inline-flex;
+    align-items: center; justify-content: center; font-weight: bold;
+    font-size: 0.85rem; margin-bottom: 8px;
+  }
+  .stage-card h3 { font-size: 0.85rem; margin-bottom: 4px; }
+  .stage-card .metaphor { font-size: 0.7rem; font-style: italic; margin-bottom: 6px; }
+  .stage-card .desc { font-size: 0.68rem; color: #888; line-height: 1.5; }
+
+  .stage-card.s1 { border-color: #4ade80; }
+  .stage-card.s1 .stage-num { background: #166534; color: #4ade80; }
+  .stage-card.s1 h3 { color: #4ade80; }
+  .stage-card.s1 .metaphor { color: #6ee7a0; }
+
+  .stage-card.s2 { border-color: #f59e0b; }
+  .stage-card.s2 .stage-num { background: #78350f; color: #fbbf24; }
+  .stage-card.s2 h3 { color: #fbbf24; }
+  .stage-card.s2 .metaphor { color: #fcd34d; }
+
+  .stage-card.s3 { border-color: #a78bfa; }
+  .stage-card.s3 .stage-num { background: #3b1f7a; color: #c4b5fd; }
+  .stage-card.s3 h3 { color: #c4b5fd; }
+  .stage-card.s3 .metaphor { color: #d4bfff; }
+
+  .stage-card.s4 { border-color: #38bdf8; }
+  .stage-card.s4 .stage-num { background: #0c4a6e; color: #7dd3fc; }
+  .stage-card.s4 h3 { color: #7dd3fc; }
+  .stage-card.s4 .metaphor { color: #bae6fd; }
+
+  .stage-card.s5 { border-color: #f472b6; }
+  .stage-card.s5 .stage-num { background: #831843; color: #f9a8d4; }
+  .stage-card.s5 h3 { color: #f9a8d4; }
+  .stage-card.s5 .metaphor { color: #fbcfe8; }
+
+  .stage-arrow {
+    display: flex; align-items: center; font-size: 1.4rem; color: #555;
+    padding: 0 6px; min-width: 30px; justify-content: center;
+  }
+  @media (max-width: 900px) {
+    .stage-arrow { transform: rotate(90deg); padding: 6px 0; }
+    .pipeline-overview { flex-direction: column; align-items: center; }
+    .stage-card { max-width: 340px; }
+  }
+
+  /* ── Section ── */
+  .section {
+    max-width: 1100px; margin: 0 auto 36px;
+    background: #0d0d1a; border: 1px solid #333; border-radius: 10px;
+    padding: 24px;
+  }
+  .section h2 { font-size: 1rem; color: #a78bfa; margin-bottom: 14px; }
+  .section p { font-size: 0.78rem; color: #888; line-height: 1.6; margin-bottom: 14px; }
+
+  /* ── Tree diagrams ── */
+  .tree-grid {
+    display: grid; grid-template-columns: 1fr 60px 1fr; gap: 12px; align-items: start;
+  }
+  @media (max-width: 800px) {
+    .tree-grid { grid-template-columns: 1fr; }
+    .tree-arrow-col { transform: rotate(90deg); }
+  }
+  .tree-box {
+    background: #0a0a14; border: 1px solid #2a2a3a; border-radius: 8px;
+    padding: 14px; font-family: 'Courier New', monospace; font-size: 0.7rem;
+    line-height: 1.7; white-space: pre; overflow-x: auto;
+  }
+  .tree-box .label {
+    display: inline-block; font-family: 'Segoe UI', sans-serif;
+    font-weight: bold; font-size: 0.75rem; margin-bottom: 8px;
+    padding: 2px 10px; border-radius: 4px;
+  }
+  .tree-box .label.green { background: #166534; color: #4ade80; }
+  .tree-box .label.amber { background: #78350f; color: #fbbf24; }
+  .tree-box .label.purple { background: #3b1f7a; color: #c4b5fd; }
+  .tree-box .label.blue { background: #0c4a6e; color: #7dd3fc; }
+  .tree-box .label.pink { background: #831843; color: #f9a8d4; }
+  .tree-box .label.red { background: #7f1d1d; color: #fca5a5; }
+
+  .tree-box .dir { color: #61afef; }
+  .tree-box .file { color: #ABB2BF; }
+  .tree-box .gone { color: #ef4444; text-decoration: line-through; }
+  .tree-box .added { color: #4ade80; }
+  .tree-box .changed { color: #fbbf24; }
+  .tree-box .inferred { color: #c4b5fd; }
+  .tree-box .cm { color: #5c6370; font-style: italic; }
+
+  .tree-arrow-col {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; padding-top: 30px;
+  }
+  .tree-arrow-col .arrow-label {
+    font-size: 0.65rem; color: #888; text-align: center;
+    max-width: 60px; line-height: 1.3;
+  }
+  .tree-arrow-col .arrow { font-size: 1.6rem; color: #555; }
+
+  /* ── Evolution diagram ── */
+  .evolution {
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    margin: 20px 0;
+  }
+  .evo-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .evo-box {
+    padding: 10px 18px; border-radius: 8px; font-size: 0.78rem;
+    font-weight: bold; text-align: center; min-width: 160px;
+    border: 2px solid; position: relative;
+  }
+  .evo-box.gen0 { border-color: #4ade80; color: #4ade80; background: #0f2f1a; }
+  .evo-box.gen1 { border-color: #a78bfa; color: #c4b5fd; background: #1a1535; }
+  .evo-box.gen2 { border-color: #f472b6; color: #f9a8d4; background: #2f0f25; }
+  .evo-box.gen3 { border-color: #38bdf8; color: #7dd3fc; background: #0c2a3e; }
+  .evo-sub { font-size: 0.65rem; color: #888; font-weight: normal; margin-top: 2px; }
+  .evo-arrow { color: #555; font-size: 1.2rem; padding: 4px 0; }
+  .evo-note {
+    font-size: 0.68rem; color: #888; font-style: italic;
+    max-width: 280px; text-align: center; padding: 2px 8px;
+  }
+
+  /* ── Code examples (obfuscation) ── */
+  .obf-pair {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+  }
+  @media (max-width: 800px) { .obf-pair { grid-template-columns: 1fr; } }
+  .obf-code {
+    font-family: 'Courier New', monospace; font-size: 0.68rem;
+    line-height: 1.6; color: #ABB2BF; background: #0a0a14;
+    padding: 12px; border-radius: 6px; border: 1px solid #2a2a3a;
+    overflow-x: auto; white-space: pre;
+  }
+  .obf-code .kw { color: #c678dd; }
+  .obf-code .fn { color: #61afef; }
+  .obf-code .str { color: #98c379; }
+  .obf-code .num { color: #d19a66; }
+  .obf-code .cm { color: #5c6370; font-style: italic; }
+  .obf-code .lost { color: #ef4444; text-decoration: line-through; }
+  .obf-label {
+    font-size: 0.72rem; font-weight: bold; margin-bottom: 6px;
+    padding: 3px 10px; border-radius: 4px; display: inline-block;
+  }
+  .obf-label.before { background: #166534; color: #4ade80; }
+  .obf-label.after { background: #7f1d1d; color: #fca5a5; }
+  .obf-label.inferred { background: #3b1f7a; color: #c4b5fd; }
+
+  footer {
+    text-align: center; padding: 30px; color: #555;
+    font-size: 0.72rem; font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#129430; APK Archeologist: Pipeline Anatomy</h1>
+  <div class="tagline">"We took the dinosaur apart, found its bones, added frog DNA, and built a new park."</div>
+  <a class="back" href="index.html">&larr; Back to Demo</a>
+</header>
+
+<!-- ═══ 5 Stage Overview ═══ -->
+<div class="pipeline-overview">
+  <div class="stage-card s1">
+    <div class="stage-num">1</div>
+    <h3>Original APK</h3>
+    <div class="metaphor">&#129430; The Living Dinosaur</div>
+    <div class="desc">The compiled Android app as shipped. Binary DEX, resources, manifest. It runs — but the source is sealed inside.</div>
+  </div>
+  <div class="stage-arrow">&rarr;</div>
+  <div class="stage-card s2">
+    <div class="stage-num">2</div>
+    <h3>Extracted / Decompiled</h3>
+    <div class="metaphor">&#129516; Fossils in Amber</div>
+    <div class="desc">JADX + apktool crack it open. Class names are gone, constants are orphaned, helper classes were inlined away by ProGuard.</div>
+  </div>
+  <div class="stage-arrow">&rarr;</div>
+  <div class="stage-card s3">
+    <div class="stage-num">3</div>
+    <h3>AI Inference</h3>
+    <div class="metaphor">&#129438; Frog DNA</div>
+    <div class="desc">AI reads the fossils and fills gaps. It guesses constant mappings, rebuilds stripped classes, infers visual parameters. Some guesses are wrong.</div>
+  </div>
+  <div class="stage-arrow">&rarr;</div>
+  <div class="stage-card s4">
+    <div class="stage-num">4</div>
+    <h3>Unity Project</h3>
+    <div class="metaphor">&#127963; The New Park</div>
+    <div class="desc">A runnable Unity project built from the extraction + AI inference. The "new dinosaur" — it walks and roars, but its DNA has mutations from the frog DNA.</div>
+  </div>
+  <div class="stage-arrow">&rarr;</div>
+  <div class="stage-card s5">
+    <div class="stage-num">5</div>
+    <h3>New APK Patch</h3>
+    <div class="metaphor">&#129516;&#8594;&#129430; Second Generation</div>
+    <div class="desc">A patched APK that runs on top of the original. Like a descendant that inherits the mutations — stabilizing over iterations until it evolves into a faithful reproduction.</div>
+  </div>
+</div>
+
+<!-- ═══ Stage 1 → 2: APK Extraction ═══ -->
+<div class="section">
+  <h2>Stage 1 &#8594; 2: What Extraction Does to the File Structure</h2>
+  <p>The APK is a ZIP archive containing compiled Dalvik bytecode (DEX), compressed resources, and a binary manifest.
+     JADX decompiles the DEX back to Java/Kotlin, and apktool decodes resources. ProGuard has already destroyed
+     class names, method names, and inlined small helper classes.</p>
+
+  <div class="tree-grid">
+    <div class="tree-box">
+<span class="label green">STAGE 1 — Original APK (sealed)</span>
+<span class="dir">DinoDash.apk</span>
+<span class="file">  ├── classes.dex</span>           <span class="cm">← compiled bytecode</span>
+<span class="file">  ├── resources.arsc</span>         <span class="cm">← binary resource table</span>
+<span class="file">  ├── AndroidManifest.xml</span>     <span class="cm">← binary XML</span>
+<span class="dir">  ├── res/</span>
+<span class="file">  │   ├── layout/activity_main.xml</span>
+<span class="file">  │   ├── values/strings.xml</span>
+<span class="file">  │   ├── values/colors.xml</span>
+<span class="file">  │   └── values/themes.xml</span>
+<span class="dir">  ├── META-INF/</span>              <span class="cm">← signing certs</span>
+<span class="file">  │   ├── CERT.SF</span>
+<span class="file">  │   └── CERT.RSA</span>
+<span class="dir">  └── assets/</span>                <span class="cm">← game data if any</span>
+</div>
+
+    <div class="tree-arrow-col">
+      <div class="arrow-label">JADX + apktool</div>
+      <div class="arrow">&#10145;</div>
+      <div class="arrow-label">ProGuard damage visible</div>
+    </div>
+
+    <div class="tree-box">
+<span class="label red">STAGE 2 — Extracted / Decompiled</span>
+<span class="dir">extracted/</span>
+<span class="dir">  ├── sources/</span>               <span class="cm">← JADX output</span>
+<span class="dir">  │   └── com/archeologist/dinodash/</span>
+<span class="changed">  │       ├── MainActivity.java</span> <span class="cm">← readable</span>
+<span class="gone">  │       ├── a.java</span>           <span class="cm">← was GameView.kt</span>
+<span class="gone">  │       ├── b.java</span>           <span class="cm">← was GameEngine.kt</span>
+<span class="gone">  │       ├── c.java</span>           <span class="cm">← unknown helper</span>
+<span class="gone">  │       ├── d.java</span>           <span class="cm">← unknown helper</span>
+<span class="cm">  │       │   (VisualConfig → inlined away)</span>
+<span class="cm">  │       │   (DinoAnimator → inlined away)</span>
+<span class="cm">  │       │   (TailRenderer → inlined away)</span>
+<span class="cm">  │       │   (ParticleSystem → GONE)</span>
+<span class="cm">  │       │   (DayNightCycle → GONE)</span>
+<span class="cm">  │       │   (ComboTracker → GONE)</span>
+<span class="dir">  ├── res/</span>                    <span class="cm">← decoded XML</span>
+<span class="file">  │   ├── layout/activity_main.xml</span>
+<span class="file">  │   └── values/strings.xml</span>
+<span class="file">  ├── AndroidManifest.xml</span>      <span class="cm">← decoded to text</span>
+<span class="file">  └── apktool.yml</span>             <span class="cm">← extraction metadata</span>
+</div>
+  </div>
+</div>
+
+<!-- ═══ Stage 2 → 3: AI Inference ═══ -->
+<div class="section">
+  <h2>Stage 2 &#8594; 3: What AI Inference Produces</h2>
+  <p>The AI reads the decompiled output, maps obfuscated names back to likely originals, and generates
+     reconstruction reports. It tries to rebuild stripped classes from the orphaned code fragments.
+     Every guess is recorded with a confidence score.</p>
+
+  <div class="tree-grid">
+    <div class="tree-box">
+<span class="label red">STAGE 2 — Decompiled (input)</span>
+<span class="dir">extracted/sources/</span>
+<span class="gone">  ├── a.java</span>         <span class="cm">← 14 orphaned literals</span>
+<span class="gone">  ├── b.java</span>         <span class="cm">← physics + draw code</span>
+<span class="gone">  ├── c.java</span>         <span class="cm">← unclear purpose</span>
+<span class="gone">  ├── d.java</span>         <span class="cm">← unclear purpose</span>
+<span class="file">  └── MainActivity.java</span>
+
+<span class="cm">Known unknowns:</span>
+<span class="cm">  • 14 numeric literals unassigned</span>
+<span class="cm">  • 7 helper classes missing</span>
+<span class="cm">  • 3 drawLine calls ambiguous</span>
+<span class="cm">  • Pair&lt;Float,Float&gt; sign unclear</span>
+<span class="cm">  • Color int[] order unknown</span>
+</div>
+
+    <div class="tree-arrow-col">
+      <div class="arrow-label">APK Archeologist AI</div>
+      <div class="arrow">&#10145;</div>
+      <div class="arrow-label">inference + confidence</div>
+    </div>
+
+    <div class="tree-box">
+<span class="label purple">STAGE 3 — AI Inference Output</span>
+<span class="dir">inference/</span>
+<span class="dir">  ├── mapping/</span>
+<span class="inferred">  │   ├── class-map.json</span>      <span class="cm">← a→GameView etc.</span>
+<span class="inferred">  │   ├── constant-map.json</span>   <span class="cm">← 14 literals → names</span>
+<span class="inferred">  │   └── method-map.json</span>     <span class="cm">← a()→update() etc.</span>
+<span class="dir">  ├── reconstructed/</span>
+<span class="inferred">  │   ├── DinoAnimator.kt</span>    <span class="cm">← rebuilt (58% conf)</span>
+<span class="inferred">  │   ├── TailRenderer.kt</span>    <span class="cm">← rebuilt (42% conf)</span>
+<span class="inferred">  │   ├── GroundDecorator.kt</span>  <span class="cm">← rebuilt (65% conf)</span>
+<span class="inferred">  │   ├── DayNightCycle.kt</span>   <span class="cm">← rebuilt (30% conf)</span>
+<span class="inferred">  │   └── ParticleSystem.kt</span>  <span class="cm">← rebuilt (25% conf)</span>
+<span class="cm">  │   (ComboTracker — not attempted, 0 traces)</span>
+<span class="dir">  ├── reports/</span>
+<span class="file">  │   ├── confidence.json</span>     <span class="cm">← per-field scores</span>
+<span class="file">  │   ├── ambiguities.md</span>      <span class="cm">← flagged decisions</span>
+<span class="file">  │   └── frog-dna-log.md</span>     <span class="cm">← what was guessed</span>
+<span class="dir">  └── diff/</span>
+<span class="file">      └── original-vs-inferred.patch</span>
+</div>
+  </div>
+</div>
+
+<!-- ═══ Stage 3 → 4: Unity Project ═══ -->
+<div class="section">
+  <h2>Stage 3 &#8594; 4: From Inference to Runnable Unity Project</h2>
+  <p>The AI inference output gets transformed into a Unity project structure. Android Canvas draw calls
+     map to Unity sprites/meshes. Game logic maps to MonoBehaviours. The mutations from frog DNA
+     carry over — this is the "new dinosaur" that walks and roars, but not quite like the original.</p>
+
+  <div class="tree-grid">
+    <div class="tree-box">
+<span class="label purple">STAGE 3 — Inference (input)</span>
+<span class="dir">inference/</span>
+<span class="inferred">  ├── mapping/</span>
+<span class="inferred">  │   ├── class-map.json</span>
+<span class="inferred">  │   ├── constant-map.json</span>
+<span class="inferred">  │   └── method-map.json</span>
+<span class="inferred">  ├── reconstructed/</span>
+<span class="inferred">  │   ├── DinoAnimator.kt</span>
+<span class="inferred">  │   ├── TailRenderer.kt</span>
+<span class="inferred">  │   ├── GroundDecorator.kt</span>
+<span class="inferred">  │   ├── DayNightCycle.kt</span>
+<span class="inferred">  │   └── ParticleSystem.kt</span>
+<span class="file">  └── reports/</span>
+</div>
+
+    <div class="tree-arrow-col">
+      <div class="arrow-label">Unity scaffold generator</div>
+      <div class="arrow">&#10145;</div>
+      <div class="arrow-label">Kotlin/Canvas → C#/Unity</div>
+    </div>
+
+    <div class="tree-box">
+<span class="label blue">STAGE 4 — Unity Project</span>
+<span class="dir">DinoDash-Unity/</span>
+<span class="dir">  ├── Assets/</span>
+<span class="dir">  │   ├── Scripts/</span>
+<span class="added">  │   │   ├── GameManager.cs</span>     <span class="cm">← from GameEngine</span>
+<span class="added">  │   │   ├── DinoController.cs</span>  <span class="cm">← from GameView</span>
+<span class="inferred">  │   │   ├── DinoAnimator.cs</span>   <span class="cm">← from AI rebuild</span>
+<span class="inferred">  │   │   ├── TailRenderer.cs</span>   <span class="cm">← sign still wrong</span>
+<span class="inferred">  │   │   ├── GroundSpawner.cs</span>  <span class="cm">← mod still wrong</span>
+<span class="inferred">  │   │   ├── SkyController.cs</span>  <span class="cm">← cycle still wrong</span>
+<span class="inferred">  │   │   ├── ParticleSpawner.cs</span><span class="cm"> ← still floats up</span>
+<span class="cm">  │   │   (ComboTracker — absent)</span>
+<span class="dir">  │   ├── Prefabs/</span>
+<span class="added">  │   │   ├── Dino.prefab</span>       <span class="cm">← 3 legs, 2 eyes</span>
+<span class="added">  │   │   ├── Cactus.prefab</span>
+<span class="added">  │   │   └── Bird.prefab</span>
+<span class="dir">  │   ├── Scenes/</span>
+<span class="added">  │   │   └── GameScene.unity</span>
+<span class="dir">  │   └── Config/</span>
+<span class="inferred">  │       └── VisualConfig.asset</span> <span class="cm">← scrambled values</span>
+<span class="file">  ├── ProjectSettings/</span>
+<span class="file">  │   └── ProjectSettings.asset</span>
+<span class="file">  └── Packages/</span>
+<span class="file">      └── manifest.json</span>
+</div>
+  </div>
+</div>
+
+<!-- ═══ Stage 4 → 5: New APK Patch ═══ -->
+<div class="section">
+  <h2>Stage 4 &#8594; 5: Unity Build to APK Patch</h2>
+  <p>The Unity project compiles to a new APK, but instead of replacing the original, it generates a
+     <strong>patch APK</strong> that runs alongside it. Think of it as a second-generation dinosaur —
+     it inherits the original's mutations (from frog DNA) but each iteration can be refined,
+     gradually evolving toward a stable, faithful reproduction.</p>
+
+  <div class="tree-grid">
+    <div class="tree-box">
+<span class="label blue">STAGE 4 — Unity Build Output</span>
+<span class="dir">DinoDash-Unity/Build/</span>
+<span class="file">  ├── libunity.so</span>            <span class="cm">← Unity runtime</span>
+<span class="file">  ├── libil2cpp.so</span>           <span class="cm">← compiled C# → native</span>
+<span class="dir">  ├── assets/</span>
+<span class="file">  │   ├── bin/Data/</span>           <span class="cm">← Unity serialized data</span>
+<span class="file">  │   └── globalgamemanagers</span>
+<span class="file">  ├── classes.dex</span>             <span class="cm">← Unity launcher</span>
+<span class="file">  └── AndroidManifest.xml</span>
+</div>
+
+    <div class="tree-arrow-col">
+      <div class="arrow-label">patch builder</div>
+      <div class="arrow">&#10145;</div>
+      <div class="arrow-label">overlay on original</div>
+    </div>
+
+    <div class="tree-box">
+<span class="label pink">STAGE 5 — Patched APK</span>
+<span class="dir">DinoDash-patched.apk</span>
+<span class="dir">  ├── original/</span>              <span class="cm">← original APK preserved</span>
+<span class="file">  │   ├── classes.dex</span>         <span class="cm">← untouched</span>
+<span class="file">  │   └── resources.arsc</span>      <span class="cm">← untouched</span>
+<span class="dir">  ├── patch/</span>                  <span class="cm">← Unity reconstruction</span>
+<span class="added">  │   ├── libil2cpp.so</span>       <span class="cm">← new game logic</span>
+<span class="added">  │   ├── assets/bin/Data/</span>   <span class="cm">← Unity scene data</span>
+<span class="added">  │   └── patch-manifest.json</span><span class="cm"> ← version + fidelity</span>
+<span class="file">  ├── AndroidManifest.xml</span>     <span class="cm">← merged manifest</span>
+<span class="dir">  ├── META-INF/</span>              <span class="cm">← re-signed</span>
+<span class="file">  └── fidelity-report.json</span>   <span class="cm">← mutation log</span>
+
+<span class="cm">Patch metadata:</span>
+<span class="cm">  generation: 1</span>
+<span class="cm">  fidelity: 58%</span>
+<span class="cm">  mutations: 18 (from frog DNA)</span>
+<span class="cm">  parent: DinoDash-original.apk</span>
+<span class="cm">  drift: decreasing over iterations</span>
+</div>
+  </div>
+</div>
+
+<!-- ═══ Evolution Diagram ═══ -->
+<div class="section">
+  <h2>&#129430; Generational Evolution</h2>
+  <p>Each patch iteration refines the mutations. Like breeding — the first generation has the most
+     visible frog DNA. Successive generations stabilize as the AI learns from runtime comparison
+     with the original APK's behavior.</p>
+
+  <div class="evolution">
+    <div class="evo-row">
+      <div class="evo-box gen0">
+        Original APK
+        <div class="evo-sub">100% fidelity · 0 mutations</div>
+      </div>
+    </div>
+    <div class="evo-arrow">&#8595;</div>
+    <div class="evo-note">ProGuard + decompilation destroys 75% of structure</div>
+    <div class="evo-arrow">&#8595;</div>
+    <div class="evo-row">
+      <div class="evo-box gen1">
+        Gen 1 — Frog DNA Patch
+        <div class="evo-sub">~58% fidelity · 18 mutations · 7 missing systems</div>
+      </div>
+    </div>
+    <div class="evo-arrow">&#8595;</div>
+    <div class="evo-note">Runtime diff vs original &rarr; AI corrects 6 mutations</div>
+    <div class="evo-arrow">&#8595;</div>
+    <div class="evo-row">
+      <div class="evo-box gen2">
+        Gen 2 — Stabilized
+        <div class="evo-sub">~74% fidelity · 12 mutations · tail fixed, sky fixed</div>
+      </div>
+    </div>
+    <div class="evo-arrow">&#8595;</div>
+    <div class="evo-note">Behavioral testing &rarr; combo system discovered, particles corrected</div>
+    <div class="evo-arrow">&#8595;</div>
+    <div class="evo-row">
+      <div class="evo-box gen3">
+        Gen N — Stable Reproduction
+        <div class="evo-sub">~95% fidelity · 2 minor visual diffs · fully playable</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ More Obfuscation Examples ═══ -->
+<div class="section">
+  <h2>&#128270; More Obfuscation Examples</h2>
+  <p>Three additional examples showing what ProGuard does to real game code, and how the AI tries to reverse it.</p>
+
+  <!-- Example 1: ParticleSystem -->
+  <h3 style="font-size:0.85rem;color:#f87171;margin:16px 0 8px;">Example 1: ParticleSystem — Completely Stripped</h3>
+  <div class="obf-pair">
+    <div>
+      <div class="obf-label before">Original Kotlin</div>
+      <div class="obf-code"><span class="kw">class</span> <span class="fn">ParticleSystem</span> {
+  <span class="kw">data class</span> <span class="fn">Particle</span>(
+    <span class="kw">var</span> x: Float, <span class="kw">var</span> y: Float,
+    <span class="kw">var</span> vx: Float, <span class="kw">var</span> vy: Float,
+    <span class="kw">var</span> life: Float, <span class="kw">val</span> maxLife: Float,
+    <span class="kw">val</span> radius: Float  <span class="cm">// 1.5f..3.5f</span>
+  )
+
+  <span class="kw">fun</span> <span class="fn">spawnDust</span>(x: Float, y: Float, n: Int) {
+    repeat(n) {
+      particles += Particle(
+        x = x + random(-<span class="num">15f</span>, <span class="num">15f</span>),
+        y = y,
+        vx = random(-<span class="num">30f</span>, <span class="num">30f</span>),  <span class="cm">// horizontal spread</span>
+        vy = random(<span class="num">10f</span>, <span class="num">40f</span>),    <span class="cm">// initial upward</span>
+        life = <span class="num">0.4f</span>,
+        maxLife = <span class="num">0.4f</span>,
+        radius = random(<span class="num">1.5f</span>, <span class="num">3.5f</span>)
+      )
+    }
+  }
+
+  <span class="kw">fun</span> <span class="fn">update</span>(dt: Float) {
+    particles.forEach {
+      it.vy += <span class="num">600f</span> * dt  <span class="cm">// gravity pulls DOWN</span>
+      it.x += it.vx * dt
+      it.y += it.vy * dt
+      it.life -= dt
+    }
+  }
+
+  <span class="kw">fun</span> <span class="fn">draw</span>(canvas: Canvas) {
+    particles.forEach {
+      paint.alpha = (it.life/it.maxLife * 255).toInt()
+      paint.color = <span class="num">0xFF8B7355</span>.toInt() <span class="cm">// brown</span>
+      canvas.drawCircle(it.x, it.y, it.radius, paint)
+    }
+  }
+}</div>
+    </div>
+    <div>
+      <div class="obf-label after">JADX Output: NOTHING</div>
+      <div class="obf-code"><span class="cm">// ParticleSystem was completely inlined by ProGuard R8.</span>
+<span class="cm">// The data class Particle was replaced with float arrays.</span>
+<span class="cm">// The class itself was eliminated.</span>
+<span class="cm">//</span>
+<span class="cm">// What remains in class `a` (GameView):</span>
+
+<span class="kw">private float</span>[] f23;  <span class="cm">// was particles array?</span>
+<span class="kw">private int</span> f24;      <span class="cm">// was particle count?</span>
+
+<span class="cm">// In method a(Canvas):</span>
+<span class="cm">// ... 200 lines of draw calls ...</span>
+<span class="cm">// No reference to drawCircle with brown color.</span>
+<span class="cm">// The entire particle system was optimized away</span>
+<span class="cm">// because R8 determined it had no side effects</span>
+<span class="cm">// on the game score or collision detection.</span>
+<span class="cm">//</span>
+<span class="cm">// The AI has ZERO fragments to work with.</span>
+<span class="cm">// It inferred particles exist from:</span>
+<span class="cm">//   1. The float[] arrays (could be anything)</span>
+<span class="cm">//   2. Common game patterns</span>
+<span class="cm">//   3. A heuristic: "games usually have particles"</span>
+<span class="cm">//</span>
+<span class="cm">// Result: purple squares that float UP</span>
+<span class="cm">//         (original: brown circles falling DOWN)</span></div>
+    </div>
+  </div>
+
+  <!-- Example 2: API Client -->
+  <h3 style="font-size:0.85rem;color:#fbbf24;margin:16px 0 8px;">Example 2: ApiClient — Endpoints Survive, Auth Logic Doesn't</h3>
+  <div class="obf-pair">
+    <div>
+      <div class="obf-label before">Original Kotlin</div>
+      <div class="obf-code"><span class="kw">object</span> <span class="fn">ApiClient</span> {
+  <span class="kw">private const val</span> BASE_URL =
+    <span class="str">"https://api.dinodash.example.com/v2"</span>
+
+  <span class="kw">fun</span> <span class="fn">submitScore</span>(
+    userId: String,
+    score: Int,
+    token: String
+  ): Response {
+    <span class="kw">val</span> hmac = AuthManager.sign(
+      <span class="str">"$userId:$score"</span>, token
+    )
+    <span class="kw">return</span> post(
+      <span class="str">"$BASE_URL/scores"</span>,
+      body = ScorePayload(userId, score, hmac)
+    )
+  }
+}
+
+<span class="kw">object</span> <span class="fn">AuthManager</span> {
+  <span class="kw">fun</span> <span class="fn">sign</span>(data: String, key: String): String {
+    <span class="kw">val</span> mac = Mac.getInstance(<span class="str">"HmacSHA256"</span>)
+    mac.init(SecretKeySpec(key.toByteArray(), <span class="str">"HmacSHA256"</span>))
+    <span class="kw">return</span> mac.doFinal(data.toByteArray())
+      .joinToString(<span class="str">""</span>) { <span class="str">"%02x"</span>.format(it) }
+  }
+}</div>
+    </div>
+    <div>
+      <div class="obf-label after">JADX Output</div>
+      <div class="obf-code"><span class="cm">// String literals SURVIVE obfuscation!</span>
+<span class="cm">// This is how APK Archeologist finds endpoints.</span>
+
+<span class="kw">public class</span> e {
+  <span class="kw">private static final</span> String f1 =
+    <span class="str">"https://api.dinodash.example.com/v2"</span>;
+  <span class="cm">// ↑ URL string survived intact</span>
+
+  <span class="kw">public static</span> Object <span class="fn">a</span>(String s, <span class="kw">int</span> i, String s2) {
+    <span class="cm">// submitScore, but we don't know that</span>
+    String v1 = f.a(s + <span class="str">":"</span> + i, s2);
+    <span class="cm">// ↑ f.a() = AuthManager.sign()</span>
+    <span class="cm">//   but we can't tell from the name</span>
+    <span class="kw">return</span> a(f1 + <span class="str">"/scores"</span>,
+      <span class="kw">new</span> g(s, i, v1));
+    <span class="cm">// ↑ "/scores" path survives too!</span>
+  }
+}
+
+<span class="kw">public class</span> f {
+  <span class="kw">public static</span> String <span class="fn">a</span>(String s, String s2) {
+    <span class="cm">// AuthManager.sign() body survived</span>
+    <span class="cm">// because crypto APIs can't be inlined</span>
+    Mac v1 = Mac.getInstance(<span class="str">"HmacSHA256"</span>);
+    <span class="cm">// ↑ crypto string survives</span>
+    v1.init(<span class="kw">new</span> SecretKeySpec(
+      s2.getBytes(), <span class="str">"HmacSHA256"</span>));
+    <span class="cm">// Structure intact, names gone</span>
+  }
+}</div>
+    </div>
+  </div>
+
+  <!-- Example 3: Color Constants -->
+  <h3 style="font-size:0.85rem;color:#c4b5fd;margin:16px 0 8px;">Example 3: Color Constants — Numbers Without Names</h3>
+  <div class="obf-pair">
+    <div>
+      <div class="obf-label before">Original Kotlin</div>
+      <div class="obf-code"><span class="kw">object</span> <span class="fn">DayNightCycle</span> {
+  <span class="cm">// Named colors with clear purpose</span>
+  <span class="kw">val</span> DAY_SKY_TOP    = Color(<span class="num">0xFF87CEEB</span>)  <span class="cm">// light blue</span>
+  <span class="kw">val</span> DAY_SKY_BOT    = Color(<span class="num">0xFFF7F1E3</span>)  <span class="cm">// warm cream</span>
+  <span class="kw">val</span> DUSK_SKY_TOP   = Color(<span class="num">0xFF2C1654</span>)  <span class="cm">// deep purple</span>
+  <span class="kw">val</span> DUSK_SKY_BOT   = Color(<span class="num">0xFFC46F3C</span>)  <span class="cm">// warm orange</span>
+  <span class="kw">val</span> NIGHT_SKY_TOP  = Color(<span class="num">0xFF0A0A1A</span>)  <span class="cm">// near black</span>
+  <span class="kw">val</span> NIGHT_SKY_BOT  = Color(<span class="num">0xFF1A1A3E</span>)  <span class="cm">// dark navy</span>
+
+  <span class="kw">val</span> CYCLE = <span class="num">500</span>  <span class="cm">// score points per full cycle</span>
+
+  <span class="kw">fun</span> <span class="fn">getSkyColors</span>(score: Int): Pair {
+    <span class="kw">val</span> phase = (score % CYCLE) / CYCLE.toFloat()
+    <span class="cm">// 5-phase smooth transition:</span>
+    <span class="cm">//   0.0-0.4  day</span>
+    <span class="cm">//   0.4-0.5  day→dusk</span>
+    <span class="cm">//   0.5-0.6  dusk</span>
+    <span class="cm">//   0.6-0.7  dusk→night</span>
+    <span class="cm">//   0.7-1.0  night</span>
+    <span class="kw">return</span> lerpColors(phase, ...)
+  }
+}</div>
+    </div>
+    <div>
+      <div class="obf-label inferred">AI Attempted Reconstruction</div>
+      <div class="obf-code"><span class="cm">// JADX gave us this int array:</span>
+<span class="cm">// {-7895317, -3424676, -15724262,</span>
+<span class="cm">//  -12862916, -16316134, -15263426}</span>
+<span class="cm">//</span>
+<span class="cm">// Converting to hex:</span>
+<span class="cm">// 0xFF87CEEB, 0xFFCB..?, 0xFF0A0A1A...</span>
+<span class="cm">//</span>
+<span class="cm">// The AI knows these are colors.</span>
+<span class="cm">// But which is DAY_TOP vs DUSK_BOT?</span>
+<span class="cm">// The array order doesn't match usage order.</span>
+
+<span class="kw">function</span> <span class="fn">getSkyColors</span>(score) {
+  <span class="kw">var</span> phase = (score % <span class="num">300</span>) / <span class="num">300</span>;
+  <span class="cm">// ↑ AI guessed 300, original was 500</span>
+  <span class="cm">//   (picked wrong int from the pool)</span>
+
+  <span class="kw">if</span> (phase < <span class="num">0.5</span>) {
+    <span class="kw">return</span> { top: <span class="str">'#87CEEB'</span>, bot: <span class="str">'#F7F1E3'</span> };
+  } <span class="kw">else</span> {
+    <span class="kw">return</span> { top: <span class="str">'#0A0A1A'</span>, bot: <span class="str">'#1A1A3E'</span> };
+  }
+  <span class="cm">// ↑ Binary toggle instead of 5-phase blend</span>
+  <span class="cm">//   No dusk transition at all</span>
+  <span class="cm">//   No lerpColor (function was stripped)</span>
+  <span class="cm">//   Instant day→night flip</span>
+}</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  "Life, uh, finds a way." &nbsp;&bull;&nbsp; APK Archeologist &nbsp;&bull;&nbsp;
+  Each generation of the patch gets closer to the original — mutations stabilize over time.
+</footer>
+
+</body>
+</html>

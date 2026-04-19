@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dino Dash — Side by Side Comparison</title>
+<title>Dino Dash — Reconstruction Pipeline</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -13,37 +13,18 @@
     min-height: 100vh;
   }
 
-  header {
-    text-align: center;
-    padding: 20px 20px 10px;
-  }
-  header h1 {
-    font-size: 1.6rem;
-    margin-bottom: 6px;
-  }
-  header .tagline {
-    color: #a78bfa;
-    font-style: italic;
-    font-size: 0.85rem;
-  }
+  header { text-align: center; padding: 20px 20px 10px; }
+  header h1 { font-size: 1.6rem; margin-bottom: 6px; }
+  header .tagline { color: #a78bfa; font-style: italic; font-size: 0.85rem; }
 
   .controls {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 12px 0;
-    flex-wrap: wrap;
-    padding: 0 10px;
+    display: flex; justify-content: center; gap: 8px; margin: 12px 0;
+    flex-wrap: wrap; padding: 0 10px;
   }
   .controls button {
-    background: #1e1e3a;
-    border: 1px solid #444;
-    color: #e0e0e0;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.82rem;
-    transition: all 0.2s;
+    background: #1e1e3a; border: 1px solid #444; color: #e0e0e0;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 0.78rem; transition: all 0.2s;
   }
   .controls button:hover { background: #2a2a4a; border-color: #a78bfa; }
   .controls button.active { border-color: #a78bfa; background: #2a2a4a; box-shadow: 0 0 8px rgba(167,139,250,0.3); }
@@ -51,248 +32,225 @@
   .view { display: none; }
   .view.active { display: block; }
 
+  /* ── Frame scaling ── */
+  .frame-outer { overflow: hidden; border-radius: 8px; background: #1a1a2e; }
+  .frame-inner { width: 820px; height: 540px; transform-origin: top left; }
+  .frame-inner iframe { width: 820px; height: 540px; border: none; background: #1a1a2e; }
+
+  /* ── Pipeline ── */
+  .pipeline { padding: 10px 20px 20px; }
+  .pipeline-stages {
+    display: flex; justify-content: center; align-items: center; gap: 0;
+    margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .stage-btn {
+    background: #1e1e3a; border: 2px solid #333; color: #888;
+    padding: 10px 18px; cursor: pointer; font-size: 0.8rem;
+    transition: all 0.2s; position: relative;
+  }
+  .stage-btn:first-child { border-radius: 8px 0 0 8px; }
+  .stage-btn:last-child { border-radius: 0 8px 8px 0; }
+  .stage-btn.active { color: #fff; }
+  .stage-btn[data-stage="original"].active { border-color: #4ade80; background: #0f2f1a; }
+  .stage-btn[data-stage="decompiled"].active { border-color: #ef4444; background: #2f0f0f; }
+  .stage-btn[data-stage="reconstructed"].active { border-color: #f59e0b; background: #2f1f0a; }
+  .stage-arrow { color: #555; font-size: 1.2rem; padding: 0 8px; }
+
+  .stage-info {
+    text-align: center; margin-bottom: 12px; min-height: 40px;
+  }
+  .stage-info .stage-title { font-size: 1rem; font-weight: bold; margin-bottom: 2px; }
+  .stage-info .stage-desc { font-size: 0.75rem; color: #888; }
+  .stage-fidelity {
+    display: flex; justify-content: center; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .fidelity-bar {
+    width: 200px; height: 8px; background: #1e1e3a; border-radius: 4px;
+    overflow: hidden; border: 1px solid #333;
+  }
+  .fidelity-fill { height: 100%; transition: width 0.5s, background 0.5s; border-radius: 4px; }
+  .fidelity-text { font-size: 0.8rem; font-weight: bold; }
+
+  .stage-frame { display: flex; justify-content: center; margin-bottom: 16px; }
+
+  .tier-selector {
+    display: flex; justify-content: center; gap: 6px; margin-bottom: 16px;
+    align-items: center; flex-wrap: wrap;
+  }
+  .tier-selector span { font-size: 0.78rem; color: #888; }
+  .tier-btn {
+    background: #1e1e3a; border: 1px solid #555; color: #888;
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.72rem;
+    transition: all 0.15s;
+  }
+  .tier-btn:hover { border-color: #a78bfa; color: #e0e0e0; }
+  .tier-btn.active { border-color: #a78bfa; background: #2a2a5a; color: #c4b5fd; box-shadow: 0 0 8px rgba(167,139,250,0.2); }
+
+  /* ── Obfuscation panel ── */
+  .obf-section {
+    max-width: 900px; margin: 0 auto; padding: 16px;
+    background: #0d0d1a; border: 1px solid #333; border-radius: 10px;
+  }
+  .obf-section h3 { font-size: 0.9rem; color: #a78bfa; margin-bottom: 10px; }
+  .obf-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 800px) { .obf-columns { grid-template-columns: 1fr; } }
+  .obf-code {
+    font-family: 'Courier New', monospace; font-size: 0.68rem;
+    line-height: 1.6; color: #ABB2BF; background: #0a0a14;
+    padding: 12px; border-radius: 6px; border: 1px solid #2a2a3a;
+    overflow-x: auto; white-space: pre;
+  }
+  .obf-code .kw { color: #c678dd; }
+  .obf-code .fn { color: #61afef; }
+  .obf-code .str { color: #98c379; }
+  .obf-code .num { color: #d19a66; }
+  .obf-code .cm { color: #5c6370; font-style: italic; }
+  .obf-code .lost { color: #ef4444; text-decoration: line-through; }
+  .obf-code .ok { color: #98c379; }
+  .obf-label {
+    font-size: 0.75rem; font-weight: bold; margin-bottom: 6px;
+    padding: 3px 10px; border-radius: 4px; display: inline-block;
+  }
+  .obf-label.before { background: #166534; color: #4ade80; }
+  .obf-label.after { background: #7f1d1d; color: #fca5a5; }
+
   /* ── Side by Side ── */
-  .comparison {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    padding: 10px 20px 20px;
-  }
-  .panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+  .comparison { display: flex; justify-content: center; gap: 16px; padding: 10px 20px 20px; }
+  .panel { display: flex; flex-direction: column; align-items: center; }
   .panel .label {
-    font-size: 0.85rem;
-    margin-bottom: 8px;
-    padding: 4px 14px;
-    border-radius: 12px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
+    font-size: 0.85rem; margin-bottom: 8px; padding: 4px 14px;
+    border-radius: 12px; font-weight: bold; letter-spacing: 0.5px;
   }
   .panel.original .label { background: #166534; color: #4ade80; }
   .panel.reconstructed .label { background: #78350f; color: #fbbf24; }
 
-  .frame-outer {
-    overflow: hidden;
-    border-radius: 8px;
-    background: #1a1a2e;
-  }
-  .frame-inner {
-    width: 820px;
-    height: 540px;
-    transform-origin: top left;
-  }
-  .frame-inner iframe {
-    width: 820px;
-    height: 540px;
-    border: none;
-    background: #1a1a2e;
-  }
-
-  /* ── Single panel (Original Only / Reconstructed Only) ── */
-  .single-view {
-    display: flex;
-    justify-content: center;
-    padding: 10px 20px 20px;
-  }
-  .single-view .panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
   /* ── Show Your Work ── */
-  .showwork {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 10px 20px 30px;
-  }
-  .showwork-top {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  .showwork-top .toggle-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #1e1e3a;
-    padding: 6px 14px;
-    border-radius: 8px;
-    border: 1px solid #444;
-  }
-  .showwork-top .toggle-group span { font-size: 0.85rem; }
-  .toggle-btn {
-    background: #2a2a4a;
-    border: 1px solid #555;
-    color: #e0e0e0;
-    padding: 4px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.15s;
-  }
-  .toggle-btn.on { border-color: #a78bfa; background: #3a2a6a; color: #d4bfff; }
-  .toggle-btn.off { border-color: #666; }
-
-  .showwork-frame {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-
-  .showwork-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  @media (max-width: 800px) {
-    .showwork-columns { grid-template-columns: 1fr; }
-  }
+  .showwork { max-width: 1100px; margin: 0 auto; padding: 10px 20px 30px; }
+  .showwork-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .showwork-columns { grid-template-columns: 1fr; } }
   .showwork-card {
-    background: #1a1a2e;
-    border: 1px solid #333;
-    border-radius: 10px;
-    padding: 20px;
+    background: #1a1a2e; border: 1px solid #333; border-radius: 10px; padding: 20px;
   }
-  .showwork-card h3 {
-    font-size: 1rem;
-    margin-bottom: 4px;
-  }
-  .showwork-card .card-sub {
-    font-size: 0.75rem;
-    color: #888;
-    margin-bottom: 14px;
-    font-style: italic;
-  }
-  .showwork-card.real { border-color: #ef4444; }
-  .showwork-card.real h3 { color: #f87171; }
-  .showwork-card.cosmetic { border-color: #a78bfa; }
-  .showwork-card.cosmetic h3 { color: #c4b5fd; }
-
-  .artifact-list {
-    list-style: none;
-    font-size: 0.8rem;
-    line-height: 1.8;
-  }
-  .artifact-list li::before {
-    display: inline-block;
-    width: 18px;
-    text-align: center;
-    margin-right: 6px;
-  }
-  .showwork-card.real .artifact-list li::before { content: '✗'; color: #ef4444; }
-  .showwork-card.cosmetic .artifact-list li::before { content: '🎭'; }
-  .artifact-list .detail {
-    color: #888;
-    font-size: 0.72rem;
-  }
+  .showwork-card h3 { font-size: 1rem; margin-bottom: 4px; }
+  .showwork-card .card-sub { font-size: 0.75rem; color: #888; margin-bottom: 14px; font-style: italic; }
+  .showwork-card.stripped { border-color: #ef4444; }
+  .showwork-card.stripped h3 { color: #f87171; }
+  .showwork-card.tier1 { border-color: #f59e0b; }
+  .showwork-card.tier1 h3 { color: #fbbf24; }
+  .showwork-card.tier2 { border-color: #a78bfa; }
+  .showwork-card.tier2 h3 { color: #c4b5fd; }
+  .showwork-card.tier3 { border-color: #34d399; }
+  .showwork-card.tier3 h3 { color: #6ee7b7; }
+  .artifact-list { list-style: none; font-size: 0.78rem; line-height: 1.8; }
+  .artifact-list li { padding-left: 22px; position: relative; }
+  .artifact-list li::before { position: absolute; left: 0; width: 16px; text-align: center; }
+  .showwork-card.stripped .artifact-list li::before { content: '✗'; color: #ef4444; }
+  .artifact-list .detail { color: #888; font-size: 0.7rem; }
 
   .showwork-verdict {
-    text-align: center;
-    margin-top: 20px;
-    padding: 14px 20px;
-    background: #1a1a2e;
-    border: 1px dashed #a78bfa;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    color: #c4b5fd;
-    line-height: 1.6;
+    text-align: center; margin-top: 20px; padding: 14px 20px;
+    background: #1a1a2e; border: 1px dashed #a78bfa; border-radius: 8px;
+    font-size: 0.85rem; color: #c4b5fd; line-height: 1.6;
   }
 
-  /* ── Difference Table ── */
+  /* ── Diff Table ── */
   .diff-section { padding: 20px; }
+  .diff-section { overflow-x: auto; }
   .diff-table {
-    max-width: 920px;
-    margin: 0 auto;
-    border-collapse: collapse;
-    font-size: 0.8rem;
-    width: 100%;
+    max-width: 1150px; margin: 0 auto; border-collapse: collapse;
+    font-size: 0.72rem; width: 100%;
   }
-  .diff-table th, .diff-table td {
-    padding: 8px 14px;
-    border: 1px solid #333;
-    text-align: left;
-  }
-  .diff-table th { background: #1e1e3a; color: #a78bfa; }
+  .diff-table th, .diff-table td { padding: 5px 8px; border: 1px solid #333; text-align: left; }
+  .diff-table th { background: #1e1e3a; color: #a78bfa; white-space: nowrap; }
   .diff-table .original-val { color: #4ade80; }
-  .diff-table .recon-val { color: #fbbf24; }
-  .diff-table .gap { color: #ef4444; font-style: italic; }
+  .diff-table .decompiled-val { color: #ef4444; }
+  .diff-table .t1-val { color: #fbbf24; }
+  .diff-table .t2-val { color: #c4b5fd; }
+  .diff-table .t3-val { color: #6ee7b7; }
 
   footer {
-    text-align: center;
-    padding: 30px;
-    color: #666;
-    font-size: 0.75rem;
-    font-style: italic;
+    text-align: center; padding: 30px; color: #666;
+    font-size: 0.75rem; font-style: italic;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>&#129430; Dino Dash: Original vs Reconstructed</h1>
+  <h1>&#129430; Dino Dash: APK Reconstruction Pipeline</h1>
   <div class="tagline">"Your scientists were so preoccupied with whether or not they could decompile it..."</div>
 </header>
 
 <div class="controls">
-  <button id="btn-both" class="active" onclick="showView('both')">Side by Side</button>
-  <button id="btn-original" onclick="showView('original')">Original Only</button>
-  <button id="btn-reconstructed" onclick="showView('reconstructed')">Reconstructed Only</button>
+  <button id="btn-pipeline" class="active" onclick="showView('pipeline')">Pipeline</button>
+  <button id="btn-sidebyside" onclick="showView('sidebyside')">Side by Side</button>
   <button id="btn-showwork" onclick="showView('showwork')">Show Your Work</button>
+  <button id="btn-obfuscation" onclick="showView('obfuscation')">Obfuscation Map</button>
   <button id="btn-diffs" onclick="showView('diffs')">Difference Table</button>
+  <a href="anatomy.html" style="background:#1e1e3a;border:1px solid #a78bfa;color:#c4b5fd;padding:8px 14px;border-radius:6px;font-size:0.78rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all 0.2s;" onmouseover="this.style.background='#2a2a4a'" onmouseout="this.style.background='#1e1e3a'">&#129430; Pipeline Anatomy</a>
+</div>
+
+<!-- ═══ Pipeline View ═══ -->
+<div id="view-pipeline" class="view active">
+  <div class="pipeline">
+    <div class="pipeline-stages">
+      <button class="stage-btn active" data-stage="original" onclick="setStage('original')">
+        &#9654; Original Source
+      </button>
+      <span class="stage-arrow">→ APK → ProGuard →</span>
+      <button class="stage-btn" data-stage="decompiled" onclick="setStage('decompiled')">
+        &#128270; Raw Decompiled
+      </button>
+      <span class="stage-arrow">→ AI Inference →</span>
+      <button class="stage-btn" data-stage="reconstructed" onclick="setStage('reconstructed')">
+        &#9888; AI Reconstructed
+      </button>
+    </div>
+
+    <div class="stage-info" id="stage-info">
+      <div class="stage-title" id="stage-title">Original Source Code</div>
+      <div class="stage-desc" id="stage-desc">10 Kotlin classes · all constants named · full visual fidelity</div>
+    </div>
+
+    <div class="stage-fidelity">
+      <span style="font-size:0.75rem;color:#888;">Fidelity:</span>
+      <div class="fidelity-bar">
+        <div class="fidelity-fill" id="fidelity-fill" style="width:100%;background:#4ade80;"></div>
+      </div>
+      <span class="fidelity-text" id="fidelity-text" style="color:#4ade80;">100%</span>
+    </div>
+
+    <div class="tier-selector" id="tier-selector" style="display:none;">
+      <span>Reconstruction depth:</span>
+      <button class="tier-btn active" data-tier="1" onclick="setTier(1)">Tier 1 — AST Matching</button>
+      <button class="tier-btn" data-tier="2" onclick="setTier(2)">Tier 2 — Heuristic</button>
+      <button class="tier-btn" data-tier="3" onclick="setTier(3)">Tier 3 — Neural</button>
+    </div>
+
+    <div class="stage-frame">
+      <div class="frame-outer" id="pipeline-frame-outer">
+        <div class="frame-inner">
+          <iframe id="pipeline-iframe" src="original/index.html"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ Side by Side ═══ -->
-<div id="view-both" class="view active">
-  <div class="comparison" id="comparison">
+<div id="view-sidebyside" class="view">
+  <div class="comparison">
     <div class="panel original">
       <div class="label">&#9654; ORIGINAL</div>
-      <div class="frame-outer">
-        <div class="frame-inner">
-          <iframe src="original/index.html"></iframe>
-        </div>
+      <div class="frame-outer" data-sbs>
+        <div class="frame-inner"><iframe src="original/index.html"></iframe></div>
       </div>
     </div>
     <div class="panel reconstructed">
       <div class="label">&#9888; AI RECONSTRUCTED</div>
-      <div class="frame-outer">
-        <div class="frame-inner">
-          <iframe src="reconstructed/index.html"></iframe>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ Original Only ═══ -->
-<div id="view-original" class="view">
-  <div class="single-view">
-    <div class="panel original">
-      <div class="label">&#9654; ORIGINAL</div>
-      <div class="frame-outer" data-single>
-        <div class="frame-inner">
-          <iframe src="original/index.html"></iframe>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ Reconstructed Only ═══ -->
-<div id="view-reconstructed" class="view">
-  <div class="single-view">
-    <div class="panel reconstructed">
-      <div class="label">&#9888; AI RECONSTRUCTED</div>
-      <div class="frame-outer" data-single>
-        <div class="frame-inner">
-          <iframe src="reconstructed/index.html"></iframe>
-        </div>
+      <div class="frame-outer" data-sbs>
+        <div class="frame-inner"><iframe id="sbs-recon-iframe" src="reconstructed/tier3.html"></iframe></div>
       </div>
     </div>
   </div>
@@ -301,67 +259,226 @@
 <!-- ═══ Show Your Work ═══ -->
 <div id="view-showwork" class="view">
   <div class="showwork">
-    <div class="showwork-top">
-      <div class="toggle-group">
-        <span>Cosmetic markers:</span>
-        <button class="toggle-btn on" id="markers-on" onclick="toggleMarkers(true)">ON</button>
-        <button class="toggle-btn off" id="markers-off" onclick="toggleMarkers(false)">OFF</button>
-      </div>
-      <span style="color:#888; font-size:0.78rem;">Toggle OFF to see the dino is <em>still</em> wrong without the purple fluff</span>
-    </div>
-
-    <div class="showwork-frame">
-      <div class="frame-outer" data-single>
-        <div class="frame-inner">
-          <iframe id="showwork-iframe" src="reconstructed/index.html"></iframe>
-        </div>
-      </div>
+    <div class="showwork-card stripped" style="margin-bottom:16px;">
+      <h3>Completely Stripped by ProGuard (7 classes)</h3>
+      <div class="card-sub">These helper classes were inlined or removed — zero traces remain in bytecode. Each tier attempts to recover more of them.</div>
+      <ul class="artifact-list">
+        <li><strong>ParticleSystem.kt</strong> <span class="detail">— dust on landing, trail on jump — stripped entirely</span></li>
+        <li><strong>DayNightCycle.kt</strong> <span class="detail">— sky gradient transitions, star positions — colors inlined as int literals</span></li>
+        <li><strong>ComboTracker.kt</strong> <span class="detail">— double-jump detection, score multiplier — stripped entirely</span></li>
+        <li><strong>DinoAnimator.breatheScale()</strong> <span class="detail">— subtle breathing idle animation — inlined away</span></li>
+        <li><strong>DinoAnimator.blinkTimer</strong> <span class="detail">— periodic eye blink — timer logic stripped</span></li>
+        <li><strong>Dino detail features</strong> <span class="detail">— nostril, mouth, spines, belly patch — individual draw calls lost</span></li>
+        <li><strong>Bird detail features</strong> <span class="detail">— beak triangle, eye, wing rotation — only fillRect survived</span></li>
+      </ul>
     </div>
 
     <div class="showwork-columns">
-      <div class="showwork-card real">
-        <h3>Real Reconstruction Errors (15)</h3>
-        <div class="card-sub">These simulate what actually goes wrong when you decompile an APK and let AI fill the gaps</div>
-        <ul class="artifact-list">
-          <li><strong>3 legs</strong> <span class="detail">— AI merged animation frames into simultaneous legs</span></li>
-          <li><strong>2 eyes instead of 1</strong> <span class="detail">— AI inferred bilateral symmetry from side-view code</span></li>
-          <li><strong>Tail curves UP</strong> <span class="detail">— sign flip in obfuscated Pair return value</span></li>
-          <li><strong>Angular body</strong> <span class="detail">— corner radius 3 vs 8, AI couldn't map which constant was which</span></li>
-          <li><strong>Bug-eyed</strong> <span class="detail">— eye radius 8 vs 6, constants swapped</span></li>
-          <li><strong>Exaggerated squash/stretch</strong> <span class="detail">— multiplier 0.35/0.30 vs 0.15/0.12, AI doubled it</span></li>
-          <li><strong>Thin spindly legs</strong> <span class="detail">— stroke 4px vs 6px</span></li>
-          <li><strong>Eye position shifted</strong> <span class="detail">— offset X/Y values swapped with other constants</span></li>
-          <li><strong>Square clouds</strong> <span class="detail">— lost borderRadius parameter in obfuscation</span></li>
-          <li><strong>Dense oversized rocks</strong> <span class="detail">— hash modulo 5 vs 7, base size 2 vs 1</span></li>
-          <li><strong>2× bird wing speed</strong> <span class="detail">— scroll divisor 5 vs 10</span></li>
-          <li><strong>Symmetric cactus arms</strong> <span class="detail">— AI assumed mirror symmetry</span></li>
-          <li><strong>Score 17% slower</strong> <span class="detail">— timer 0.12s vs 0.1s, guessed from nearby floats</span></li>
-          <li><strong>Birds spawn early</strong> <span class="detail">— threshold 30 vs 50, wrong integer literal</span></li>
-          <li><strong>Colors slightly off</strong> <span class="detail">— hex strings partially corrupted in decompiled output</span></li>
+      <div class="showwork-card tier1">
+        <h3>Tier 1 — AST Pattern Matching (30%)</h3>
+        <div class="card-sub">Fast structural scan: control-flow graph, call-graph deobfuscation, literal extraction, type inference. ~2 seconds.</div>
+        <ul class="artifact-list" style="list-style:none;padding:0;">
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Class names recovered (a→GameView, b→GameEngine)</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Physics constants correct (gravity, speed, jump)</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Score timer correct (0.1s), bird threshold (50)</li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> Dino is a <strong>sharp rectangle</strong> — no rounded corners</li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> <strong>No squash/stretch</strong> — completely stiff jumps</li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> Eye oversized (r=8 vs original 6), position off</li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> Thin stick legs (stroke=3 vs original 6)</li>
+          <li style="padding-left:0;"><span style="color:#666">—</span> No tail, spines, belly, particles, mountains, stars, day/night</li>
         </ul>
+        <div style="margin-top:10px;padding:8px;background:#1f1a0a;border-radius:6px;font-size:0.72rem;color:#fbbf24;">
+          Bare skeleton: the game works but looks like a stick-figure drawing.
+        </div>
       </div>
 
-      <div class="showwork-card cosmetic">
-        <h3>Cosmetic Markers (4)</h3>
-        <div class="card-sub">Added for the demo to make the narrative visible at a glance — not real artifacts</div>
-        <ul class="artifact-list">
-          <li><strong>Purple stitch marks</strong> <span class="detail">— diagonal lines across the body showing "stitched" code fragments</span></li>
-          <li><strong>Purple frog DNA glow</strong> <span class="detail">— translucent overlay highlighting AI-inferred regions</span></li>
-          <li><strong>"AI Reconstructed" watermark</strong> <span class="detail">— corner text labeling the build</span></li>
-          <li><strong>"Fidelity: 73%" on game over</strong> <span class="detail">— score screen annotation</span></li>
+      <div class="showwork-card tier2">
+        <h3>Tier 2 — Heuristic Analysis (+25% → 55%)</h3>
+        <div class="card-sub">Data-flow tracking, resource cross-refs, pattern library matching, color-int extraction, animation cycle detection. ~45 seconds.</div>
+        <ul class="artifact-list" style="list-style:none;padding:0;">
+          <li style="padding-left:0;"><span style="color:#4ade80">+</span> Body now rounded (r=4, closer to original 8)</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">+</span> Squash/stretch recovered <span class="detail">(but exaggerated: 0.25 vs original 0.15)</span></li>
+          <li style="padding-left:0;"><span style="color:#4ade80">+</span> Tail, spines, belly, mountains, stars, rocks all added</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">+</span> Day/night cycle recovered <span class="detail">(binary toggle at 300pt)</span></li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> Tail goes <strong>UP</strong> (straight line, sign-flipped)</li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> Spines are <strong>rectangles</strong> (should be triangles)</li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> Stars <strong>flicker randomly</strong> each frame</li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> Rocks too dense (mod 4), too big (base 3)</li>
+          <li style="padding-left:0;"><span style="color:#ef4444">✗</span> Score drifts (0.11s), birds early (45)</li>
         </ul>
+        <div style="margin-top:10px;padding:8px;background:#1a1535;border-radius:6px;font-size:0.72rem;color:#c4b5fd;">
+          Adds lots of features, but makes visible errors with each one. Heuristics guess wrong on sign, shape, and constants.
+        </div>
+      </div>
 
-        <div style="margin-top:20px; padding:12px; background:#1e1535; border-radius:6px; font-size:0.8rem; line-height:1.6; color:#c4b5fd;">
-          These 4 markers are storytelling — the Jurassic Park "frog DNA" metaphor made visual.
-          Toggle them OFF above. The dino still has 3 legs, 2 eyes, and a tail that curves the wrong way.
-          <em>That's</em> the real reconstruction failure.
+      <div class="showwork-card tier3">
+        <h3>Tier 3 — Neural Inference (+17% → 72%)</h3>
+        <div class="card-sub">12k-game trained model, bezier recovery, particle detection, gradient inference, parallax estimation, Play Store cross-ref. ~5 minutes.</div>
+        <ul class="artifact-list" style="list-style:none;padding:0;">
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Body well-rounded (r=7, close to original 8)</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Squash/stretch close (0.17/0.13 vs original 0.15/0.12)</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Tail <strong>bezier curve going DOWN</strong> (correct!)</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Triangle spines (correct shape!), parallax mountains</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Gradient sky transitions, fixed stars, rounded clouds</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Particles: brown dust circles with gravity (correct!)</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Eye r=6 (correct!), leg stroke=6 (correct!), score 0.1s (correct!)</li>
+          <li style="padding-left:0;"><span style="color:#4ade80">✓</span> Bird beak recovered, asymmetric cactus arms</li>
+          <li style="padding-left:0;"><span style="color:#666">—</span> Still missing: combo system, breathing, blink, mouth, nostril, grass</li>
+        </ul>
+        <div style="margin-top:10px;padding:8px;background:#0a1f18;border-radius:6px;font-size:0.72rem;color:#6ee7b7;">
+          Closest to original — but still can't recover what was completely stripped. 72% is the ceiling.
         </div>
       </div>
     </div>
 
     <div class="showwork-verdict">
-      <strong>TL;DR:</strong> 15 of the 19 differences are simulating real decompilation/AI errors.
-      The 4 purple cosmetic markers are just labels. The dino is genuinely broken without them.
+      <strong>The cost-benefit curve of reconstruction:</strong>
+      Tier 1 gets 30% in 2 seconds by mapping structure. Tier 2 adds 25% in 45 seconds by guessing at visual systems — but guesses wrong on details.
+      Tier 3 adds another 17% in 5 minutes using neural inference, getting most things right.
+      <br>Beyond 72%, the remaining features (combo system, breathing, blink) were too thoroughly stripped to recover at any cost.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Obfuscation Map ═══ -->
+<div id="view-obfuscation" class="view">
+  <div class="obf-section">
+    <h3>&#128270; What ProGuard Did to the Source Code</h3>
+    <p style="font-size:0.75rem;color:#888;margin-bottom:14px;">
+      Left: original Kotlin. Right: what JADX recovered from the APK after ProGuard minification.
+      Highlighted lines show what was lost.
+    </p>
+    <div class="obf-columns">
+      <div>
+        <div class="obf-label before">BEFORE — Original Kotlin Source</div>
+        <div class="obf-code"><span class="cm">// VisualConfig.kt — named constants</span>
+<span class="kw">object</span> <span class="fn">VisualConfig</span> {
+  <span class="kw">const val</span> BODY_CORNER_RADIUS = <span class="num">8f</span>
+  <span class="kw">const val</span> EYE_RADIUS = <span class="num">6f</span>
+  <span class="kw">const val</span> PUPIL_RADIUS = <span class="num">3f</span>
+  <span class="kw">const val</span> LEG_STROKE = <span class="num">6f</span>
+  <span class="kw">const val</span> SPINE_COUNT = <span class="num">4</span>
+  <span class="kw">const val</span> SPINE_HEIGHT = <span class="num">6f</span>
+}
+
+<span class="cm">// DinoAnimator.kt — animation helpers</span>
+<span class="kw">object</span> <span class="fn">DinoAnimator</span> {
+  <span class="kw">fun</span> <span class="fn">computeSquashX</span>(vy: Float, max: Float): Float {
+    <span class="kw">val</span> t = (vy / max).coerceIn(-<span class="num">1f</span>, <span class="num">1f</span>)
+    <span class="kw">return</span> <span class="num">1f</span> + t * <span class="num">0.15f</span>
+  }
+  <span class="kw">fun</span> <span class="fn">breatheScale</span>(phase: Float) =
+    <span class="num">1f</span> + sin(phase) * <span class="num">0.015f</span>
+  <span class="kw">fun</span> <span class="fn">shouldBlink</span>(timer: Float) = timer <= <span class="num">0f</span>
+}
+
+<span class="cm">// TailRenderer.kt — bezier tail curve</span>
+<span class="kw">object</span> <span class="fn">TailRenderer</span> {
+  <span class="kw">fun</span> <span class="fn">computeTailCurve</span>(speed: Float, max: Float, wag: Float):
+    <span class="kw">val</span> sweep = (speed / max).coerceIn(<span class="num">0f</span>, <span class="num">1f</span>)
+    <span class="kw">val</span> w = sin(wag) * <span class="num">3f</span>
+    <span class="kw">return</span> BezierPoints(
+      cx1 = <span class="num">-8f</span> - sweep * <span class="num">4f</span>,
+      cy1 = <span class="num">-2f</span> + w,
+      cx2 = <span class="num">-16f</span> - sweep * <span class="num">6f</span>,
+      cy2 = <span class="num">-8f</span> + sweep * <span class="num">12f</span> + w * <span class="num">0.5f</span>,
+      ex = <span class="num">-20f</span> - sweep * <span class="num">8f</span>,
+      ey = <span class="num">-5f</span> + sweep * <span class="num">10f</span> + w
+    )
+}
+
+<span class="cm">// DayNightCycle.kt — sky gradient</span>
+<span class="kw">object</span> <span class="fn">DayNightCycle</span> {
+  <span class="kw">private val</span> DAY_TOP = Color(<span class="num">0xFF87CEEB</span>)
+  <span class="kw">private val</span> DUSK_TOP = Color(<span class="num">0xFF2C1654</span>)
+  <span class="kw">private val</span> NIGHT_TOP = Color(<span class="num">0xFF0A0A1A</span>)
+  <span class="kw">fun</span> <span class="fn">getSkyColors</span>(score: Int): Pair {
+    <span class="kw">val</span> phase = (score % <span class="num">500</span>) / <span class="num">500f</span>
+    <span class="cm">// smooth 5-phase transition...</span>
+  }
+}
+
+<span class="cm">// ParticleSystem.kt — dust effects</span>
+<span class="kw">class</span> <span class="fn">ParticleSystem</span> {
+  <span class="kw">fun</span> <span class="fn">spawnDust</span>(x: Float, y: Float, count: Int) {
+    <span class="cm">// circles, random spread, gravity, fade...</span>
+  }
+}
+
+<span class="cm">// ComboTracker.kt — double-jump scoring</span>
+<span class="kw">object</span> <span class="fn">ComboTracker</span> {
+  <span class="kw">const val</span> COMBO_WINDOW = <span class="num">0.4f</span>
+  <span class="kw">const val</span> JUMP_BOOST = <span class="num">1.25f</span>
+  <span class="kw">const val</span> SCORE_MULT = <span class="num">2</span>
+}</div>
+      </div>
+      <div>
+        <div class="obf-label after">AFTER — JADX Decompiled Output</div>
+        <div class="obf-code"><span class="cm">// All class names replaced with single letters</span>
+<span class="cm">// All method names replaced with a(), b(), c()</span>
+<span class="cm">// const val fields inlined as literals</span>
+
+<span class="kw">public class</span> a <span class="kw">extends</span> View {
+  <span class="kw">private float</span> f1 = <span class="num">300.0f</span>;  <span class="cm">// START_SPEED</span>
+  <span class="kw">private float</span> f2 = <span class="num">800.0f</span>;  <span class="cm">// MAX_SPEED</span>
+  <span class="kw">private float</span> f3 = <span class="num">2200.0f</span>; <span class="cm">// GRAVITY</span>
+  <span class="kw">private float</span> f4 = <span class="num">-850.0f</span>; <span class="cm">// JUMP_VELOCITY</span>
+
+  <span class="cm">// 14 orphaned numeric literals:</span>
+  <span class="cm">// 8, 6, 3, 6, 4, -12, 14, 2, 12, 1.5,</span>
+  <span class="cm">// 0.15, 0.12, 0.015, 50</span>
+  <span class="cm">// ↑ which one is eye radius? body radius?</span>
+  <span class="cm">//   leg stroke? spine height? UNKNOWN.</span>
+
+  <span class="lost">// DinoAnimator → GONE (inlined into a())</span>
+  <span class="lost">// TailRenderer → GONE (inlined into b())</span>
+  <span class="lost">// GroundDecorator → GONE (became c(), d())</span>
+  <span class="lost">// ParallaxHelper → GONE entirely</span>
+  <span class="lost">// ParticleSystem → GONE entirely</span>
+  <span class="lost">// DayNightCycle → GONE (colors as int[])</span>
+  <span class="lost">// ComboTracker → GONE entirely</span>
+
+  <span class="kw">private void</span> <span class="fn">a</span>(<span class="kw">float</span> f) {
+    <span class="cm">// update — physics survived, combo logic gone</span>
+    this.f7 += this.f3 * f;  <span class="cm">// gravity</span>
+    <span class="cm">// ...</span>
+  }
+
+  <span class="kw">private void</span> <span class="fn">a</span>(Canvas c) {
+    <span class="cm">// onDraw — shape calls present:</span>
+    c.drawRoundRect(f5,f6,f7,f8, <span class="num">???</span>,<span class="num">???</span>, p1);
+    <span class="cm">// ↑ two float args = rx, ry radius</span>
+    <span class="cm">//   but which of the 14 literals?</span>
+    c.drawCircle(f9, f10, <span class="num">???</span>, p2);
+    <span class="cm">// ↑ radius = 6? 3? 8? 1.5?</span>
+    c.drawLine(f11,f12,f13,f14, p3);
+    c.drawLine(f15,f16,f17,f18, p3);
+    c.drawLine(f19,f20,f21,f22, p3);
+    <span class="cm">// ↑ 3 drawLine calls — are these:</span>
+    <span class="cm">//   a) 3 simultaneous legs?</span>
+    <span class="cm">//   b) 2 legs + 1 tail?</span>
+    <span class="cm">//   c) animation frames?</span>
+  }
+
+  <span class="kw">private</span> Pair&lt;Float,Float&gt; <span class="fn">b</span>(<span class="kw">float</span> f) {
+    <span class="cm">// was TailRenderer.computeTailCurve</span>
+    <span class="cm">// returns Pair but we can't tell</span>
+    <span class="cm">// which float is X vs Y</span>
+    <span class="kw">float</span> v1 = <span class="num">-12.0f</span> - f * <span class="num">10.0f</span>;
+    <span class="kw">float</span> v2 = <span class="num">-5.0f</span> + f * <span class="num">8.0f</span>;
+    <span class="cm">// ↑ or is it v2 = 5.0f - f * 8.0f?</span>
+    <span class="cm">//   bytecode shows: FNEG before FSUB</span>
+    <span class="cm">//   ambiguous decompilation</span>
+    <span class="kw">return new</span> Pair(v1, v2);
+  }
+
+  <span class="cm">// int[] found in constant pool:</span>
+  <span class="cm">// {-7895317, -3424676, -15724262,</span>
+  <span class="cm">//  -12862916, -16316134, -15263426}</span>
+  <span class="cm">// ↑ these are Color ints from DayNightCycle</span>
+  <span class="cm">//   but what order? what transitions?</span>
+}</div>
+      </div>
     </div>
   </div>
 </div>
@@ -373,93 +490,29 @@
       <tr>
         <th>Feature</th>
         <th>Original</th>
-        <th>Reconstructed</th>
-        <th>Gap Type</th>
+        <th>Decompiled</th>
+        <th>Tier 1 (30%)</th>
+        <th>Tier 2 (55%)</th>
+        <th>Tier 3 (72%)</th>
       </tr>
-      <tr>
-        <td>Dino body shape</td>
-        <td class="original-val">Rounded (radius 8)</td>
-        <td class="recon-val">Angular (radius 3)</td>
-        <td class="gap">Constant swap — AI couldn't map which literal was which</td>
-      </tr>
-      <tr>
-        <td>Squash &amp; stretch</td>
-        <td class="original-val">Subtle (±15% / ±12%)</td>
-        <td class="recon-val">Extreme (±35% / ±30%)</td>
-        <td class="gap">Obfuscated multiplier — AI doubled the value</td>
-      </tr>
-      <tr>
-        <td>Dino eyes</td>
-        <td class="original-val">One eye (side view), normal size</td>
-        <td class="recon-val">Two eyes (front view), bug-eyed</td>
-        <td class="gap">AI inferred bilateral symmetry from single eye code</td>
-      </tr>
-      <tr>
-        <td>Legs</td>
-        <td class="original-val">2 legs, proper thickness</td>
-        <td class="recon-val">3 thin legs (frog tripod)</td>
-        <td class="gap">AI merged animation frames → thought 3 simultaneous legs</td>
-      </tr>
-      <tr>
-        <td>Tail direction</td>
-        <td class="original-val">Curves down at speed</td>
-        <td class="recon-val">Curves UP at speed</td>
-        <td class="gap">Sign flip in obfuscated Pair return value</td>
-      </tr>
-      <tr>
-        <td>Cloud shapes</td>
-        <td class="original-val">Rounded (20px radius)</td>
-        <td class="recon-val">Square rectangles</td>
-        <td class="gap">Lost corner radius parameter in obfuscation</td>
-      </tr>
-      <tr>
-        <td>Ground rocks</td>
-        <td class="original-val">Sparse, small (mod 7, base 1px)</td>
-        <td class="recon-val">Dense, oversized (mod 5, base 2px)</td>
-        <td class="gap">Hash modulo and base offset guessed wrong</td>
-      </tr>
-      <tr>
-        <td>Bird wing speed</td>
-        <td class="original-val">Normal flap rate</td>
-        <td class="recon-val">2x flap speed</td>
-        <td class="gap">Scroll divisor halved (10 → 5)</td>
-      </tr>
-      <tr>
-        <td>Cactus arms</td>
-        <td class="original-val">Asymmetric (different heights)</td>
-        <td class="recon-val">Symmetric (same height)</td>
-        <td class="gap">AI assumed mirror symmetry</td>
-      </tr>
-      <tr>
-        <td>Score speed</td>
-        <td class="original-val">+1 every 0.1s</td>
-        <td class="recon-val">+1 every 0.12s (~17% slower)</td>
-        <td class="gap">Timer constant guessed from nearby float literals</td>
-      </tr>
-      <tr>
-        <td>Bird threshold</td>
-        <td class="original-val">Appear after score 50</td>
-        <td class="recon-val">Appear after score 30</td>
-        <td class="gap">AI picked wrong integer literal for threshold</td>
-      </tr>
-      <tr>
-        <td>Dino color</td>
-        <td class="original-val">#2D8B46 (forest green)</td>
-        <td class="recon-val">#358B52 (teal-shifted)</td>
-        <td class="gap">Hex string partially corrupted in decompiled output</td>
-      </tr>
-      <tr>
-        <td>Stitch marks</td>
-        <td class="original-val">None</td>
-        <td class="recon-val">Purple diagonal lines on body</td>
-        <td class="gap"><em>Cosmetic marker</em> — visual indicator for demo</td>
-      </tr>
-      <tr>
-        <td>Frog DNA glow</td>
-        <td class="original-val">None</td>
-        <td class="recon-val">Purple translucent overlay</td>
-        <td class="gap"><em>Cosmetic marker</em> — visual indicator for demo</td>
-      </tr>
+      <tr><td>Dino body</td><td class="original-val">Rounded (r=8), belly, nostril, mouth</td><td class="decompiled-val">Plain rectangle</td><td class="t1-val">Sharp rectangle (r=0)</td><td class="t2-val">Angular (r=4), belly added</td><td class="t3-val">Smooth (r=7), correct belly ✓</td></tr>
+      <tr><td>Dino spines</td><td class="original-val">4 triangles on back</td><td class="decompiled-val">Missing</td><td class="t1-val">Missing</td><td class="t2-val">4 rectangles (wrong shape)</td><td class="t3-val">5 triangles (correct shape!) ✓</td></tr>
+      <tr><td>Squash/stretch</td><td class="original-val">Subtle (0.15/0.12) + breathing</td><td class="decompiled-val">None</td><td class="t1-val">None — stiff jumps</td><td class="t2-val">Exaggerated (0.25/0.20)</td><td class="t3-val">Close (0.17/0.13) ✓</td></tr>
+      <tr><td>Eye</td><td class="original-val">1 eye (r=6), blinks</td><td class="decompiled-val">1 eye (r≈5), no blink</td><td class="t1-val">1 eye (r=8, oversized)</td><td class="t2-val">1 eye (r=7, closer)</td><td class="t3-val">1 eye (r=6, correct!) ✓</td></tr>
+      <tr><td>Legs</td><td class="original-val">2 legs (stroke 6), animated</td><td class="decompiled-val">2 static sticks</td><td class="t1-val">2 thin sticks (stroke 3)</td><td class="t2-val">2 legs (stroke 5)</td><td class="t3-val">2 legs (stroke 6, correct!) ✓</td></tr>
+      <tr><td>Tail</td><td class="original-val">Bezier curve, wags, curves down</td><td class="decompiled-val">Missing entirely</td><td class="t1-val">Missing</td><td class="t2-val">Straight line going UP ✗</td><td class="t3-val">Bezier curve DOWN ✓ (no wag)</td></tr>
+      <tr><td>Sky</td><td class="original-val">5-phase gradient (500pt cycle)</td><td class="decompiled-val">Flat beige</td><td class="t1-val">Flat beige (always day)</td><td class="t2-val">Binary toggle (300pt)</td><td class="t3-val">Gradient transition (500pt) ✓</td></tr>
+      <tr><td>Stars</td><td class="original-val">40 fixed positions</td><td class="decompiled-val">None</td><td class="t1-val">None</td><td class="t2-val">20 random (flicker!)</td><td class="t3-val">30 fixed positions ✓</td></tr>
+      <tr><td>Mountains</td><td class="original-val">Parallax, varied sizes</td><td class="decompiled-val">None</td><td class="t1-val">None</td><td class="t2-val">Static, no parallax</td><td class="t3-val">Parallax scroll ✓</td></tr>
+      <tr><td>Particles</td><td class="original-val">Brown dust circles, gravity</td><td class="decompiled-val">None</td><td class="t1-val">None</td><td class="t2-val">None</td><td class="t3-val">Brown dust, gravity ✓</td></tr>
+      <tr><td>Clouds</td><td class="original-val">Rounded multi-blob</td><td class="decompiled-val">Flat rectangles</td><td class="t1-val">Flat rectangles</td><td class="t2-val">Flat rectangles</td><td class="t3-val">Rounded multi-blob ✓</td></tr>
+      <tr><td>Ground rocks</td><td class="original-val">Sparse (mod 7, base 1) + grass</td><td class="decompiled-val">None</td><td class="t1-val">None</td><td class="t2-val">Dense (mod 4, base 3) ✗</td><td class="t3-val">Correct (mod 7, base 1) ✓</td></tr>
+      <tr><td>Cactus</td><td class="original-val">Asymmetric arms, detail lines</td><td class="decompiled-val">Plain rectangle</td><td class="t1-val">Plain rectangle, no arms</td><td class="t2-val">Symmetric arms</td><td class="t3-val">Asymmetric arms ✓</td></tr>
+      <tr><td>Bird</td><td class="original-val">Beak, eye, rotating wing</td><td class="decompiled-val">Plain rectangle</td><td class="t1-val">Rectangle + wing line</td><td class="t2-val">Rectangle + flap</td><td class="t3-val">Flap + beak ✓ (no eye)</td></tr>
+      <tr><td>Combo system</td><td class="original-val">Double-tap → 1.25x, 2x score</td><td class="decompiled-val">Missing</td><td class="t1-val">Missing</td><td class="t2-val">Missing</td><td class="t3-val">Missing (irrecoverable)</td></tr>
+      <tr><td>Score speed</td><td class="original-val">+1 every 0.1s</td><td class="decompiled-val">0.1s (survived)</td><td class="t1-val">0.1s (correct) ✓</td><td class="t2-val">0.11s (drifted) ✗</td><td class="t3-val">0.1s (correct) ✓</td></tr>
+      <tr><td>Bird threshold</td><td class="original-val">Score > 50</td><td class="decompiled-val">> 50 (survived)</td><td class="t1-val">> 50 (correct) ✓</td><td class="t2-val">> 45 (drifted) ✗</td><td class="t3-val">> 50 (correct) ✓</td></tr>
+      <tr><td>Dino color</td><td class="original-val">#2D8B46</td><td class="decompiled-val">Not rendered</td><td class="t1-val">#358B52 (teal shift)</td><td class="t2-val">#2F8B48 (closer)</td><td class="t3-val">#2E8B46 (1 hex off) ✓</td></tr>
     </table>
   </div>
 </div>
@@ -469,43 +522,118 @@
 </footer>
 
 <script>
-const NATIVE_W = 820;
-const NATIVE_H = 540;
+const NATIVE_W = 820, NATIVE_H = 540;
 
-function calcScale(panelCount) {
-  const gap = panelCount > 1 ? 16 : 0;
-  const padding = 40;
-  const available = window.innerWidth - padding - gap;
-  const perPanel = available / panelCount;
-  return Math.min(1, perPanel / NATIVE_W);
-}
+const STAGES = {
+  original: {
+    src: 'original/index.html',
+    title: 'Original Source Code',
+    desc: '10 Kotlin classes · all constants named · full visual fidelity',
+    fidelity: 100, fidelityColor: '#4ade80',
+    showTierSelector: false,
+  },
+  decompiled: {
+    src: 'decompiled/index.html',
+    title: 'Raw Decompiled (JADX after ProGuard)',
+    desc: '7 helper classes stripped · 14 orphaned numeric literals · rectangle dino',
+    fidelity: 25, fidelityColor: '#ef4444',
+    showTierSelector: false,
+  },
+  reconstructed: {
+    title: 'AI Reconstructed (Frog DNA)',
+    showTierSelector: true,
+  },
+};
 
-function applyScale(container, panelCount) {
-  const scale = calcScale(panelCount);
-  container.querySelectorAll('.frame-outer').forEach(outer => {
-    outer.style.width = (NATIVE_W * scale) + 'px';
-    outer.style.height = (NATIVE_H * scale) + 'px';
-    const inner = outer.querySelector('.frame-inner');
-    if (inner) inner.style.transform = 'scale(' + scale + ')';
-  });
-}
+const TIERS = {
+  1: {
+    src: 'reconstructed/tier1.html',
+    desc: 'AST pattern matching: class names mapped, physics constants identified, sharp rectangle dino',
+    fidelity: 30, fidelityColor: '#f59e0b',
+  },
+  2: {
+    src: 'reconstructed/tier2.html',
+    desc: 'Heuristic analysis: tail/spines/day-night/mountains added — but tail goes UP, squash exaggerated, stars flicker',
+    fidelity: 55, fidelityColor: '#a78bfa',
+  },
+  3: {
+    src: 'reconstructed/tier3.html',
+    desc: 'Neural inference: bezier tail, gradient sky, parallax, particles, correct proportions — closest to original',
+    fidelity: 72, fidelityColor: '#34d399',
+  },
+};
 
-function updateAllScales() {
-  const active = document.querySelector('.view.active');
-  if (!active) return;
+let currentStage = 'original';
+let currentTier = 1;
 
-  const bothEl = document.getElementById('view-both');
-  if (active === bothEl) {
-    applyScale(bothEl, 2);
+function setStage(stage) {
+  currentStage = stage;
+  const s = STAGES[stage];
+
+  document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.stage-btn[data-stage="${stage}"]`).classList.add('active');
+
+  document.getElementById('tier-selector').style.display = s.showTierSelector ? 'flex' : 'none';
+
+  if (s.showTierSelector) {
+    applyTier(currentTier);
+  } else {
+    document.getElementById('stage-title').textContent = s.title;
+    document.getElementById('stage-desc').textContent = s.desc;
+    document.getElementById('fidelity-fill').style.width = s.fidelity + '%';
+    document.getElementById('fidelity-fill').style.background = s.fidelityColor;
+    document.getElementById('fidelity-text').style.color = s.fidelityColor;
+    document.getElementById('fidelity-text').textContent = s.fidelity + '%';
+    document.getElementById('pipeline-iframe').src = s.src;
   }
+}
 
-  // Single-panel views
-  document.querySelectorAll('.frame-outer[data-single]').forEach(outer => {
-    const s = calcScale(1);
-    outer.style.width = (NATIVE_W * s) + 'px';
-    outer.style.height = (NATIVE_H * s) + 'px';
-    const inner = outer.querySelector('.frame-inner');
-    if (inner) inner.style.transform = 'scale(' + s + ')';
+function setTier(tier) {
+  currentTier = tier;
+  applyTier(tier);
+}
+
+function applyTier(tier) {
+  const t = TIERS[tier];
+  const s = STAGES.reconstructed;
+
+  document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.tier-btn[data-tier="${tier}"]`).classList.add('active');
+
+  document.getElementById('stage-title').textContent = s.title + ' — Tier ' + tier;
+  document.getElementById('stage-desc').textContent = t.desc;
+  document.getElementById('fidelity-fill').style.width = t.fidelity + '%';
+  document.getElementById('fidelity-fill').style.background = t.fidelityColor;
+  document.getElementById('fidelity-text').style.color = t.fidelityColor;
+  document.getElementById('fidelity-text').textContent = t.fidelity + '%';
+
+  document.getElementById('pipeline-iframe').src = t.src;
+
+  // Also update side-by-side iframe
+  const sbsIframe = document.getElementById('sbs-recon-iframe');
+  if (sbsIframe) sbsIframe.src = t.src;
+}
+
+function calcScale(count) {
+  const gap = count > 1 ? 16 : 0;
+  const available = window.innerWidth - 40 - gap;
+  return Math.min(1, (available / count) / NATIVE_W);
+}
+
+function updateScales() {
+  // Pipeline — single frame
+  const pOuter = document.getElementById('pipeline-frame-outer');
+  const s1 = calcScale(1);
+  pOuter.style.width = (NATIVE_W * s1) + 'px';
+  pOuter.style.height = (NATIVE_H * s1) + 'px';
+  pOuter.querySelector('.frame-inner').style.transform = 'scale(' + s1 + ')';
+
+  // Side by side
+  const s2 = calcScale(2);
+  document.querySelectorAll('[data-sbs]').forEach(outer => {
+    outer.style.width = (NATIVE_W * s2) + 'px';
+    outer.style.height = (NATIVE_H * s2) + 'px';
+    outer.querySelector('.frame-inner').style.transform = 'scale(' + s2 + ')';
   });
 }
 
@@ -514,20 +642,11 @@ function showView(id) {
   document.getElementById('btn-' + id).classList.add('active');
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + id).classList.add('active');
-  updateAllScales();
+  updateScales();
 }
 
-let markersOn = true;
-function toggleMarkers(on) {
-  markersOn = on;
-  document.getElementById('markers-on').className = 'toggle-btn ' + (on ? 'on' : 'off');
-  document.getElementById('markers-off').className = 'toggle-btn ' + (on ? 'off' : 'on');
-  const frame = document.getElementById('showwork-iframe');
-  frame.src = on ? 'reconstructed/index.html' : 'reconstructed/index.html?clean=true';
-}
-
-window.addEventListener('resize', updateAllScales);
-updateAllScales();
+window.addEventListener('resize', updateScales);
+updateScales();
 </script>
 </body>
 </html>

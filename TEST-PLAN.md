@@ -167,30 +167,56 @@ npx apk-archeologist compare \
 
 ### 2.2 — Run the Reconstructed Game (Web)
 
+> **Important:** The web demo (`web/` folder) is **pure HTML/JS/Canvas** — it does NOT use the `sample-game/` folder.
+> The `sample-game/` folder contains the real Kotlin Android source code for a separate APK build pipeline (Phase 2.1 above).
+> The web files are self-contained simulations of what the decompile→reconstruct pipeline would produce.
+
 ```bash
 npm run demo:web
 # Navigate to http://localhost:3000/reconstructed/
 ```
 
-**Verification — Spot the "Frog DNA":**
+The reconstructed game supports three tiers of AI analysis depth via URL parameter:
+- `?tier=1` — AST Pattern Matching (30% fidelity)
+- `?tier=2` — Heuristic Analysis (55% fidelity)
+- `?tier=3` — Neural Inference (72% fidelity)
 
-These 13 differences should be visible compared to the original:
+**Verification — Tier 1 (AST Pattern Matching, 30%):**
+- [ ] Dino is a **sharp rectangle** — no rounded corners at all
+- [ ] Jumps are completely **stiff** — no squash/stretch animation
+- [ ] No tail, no spines, no belly patch
+- [ ] Sky is always daytime (flat beige), no mountains or stars
+- [ ] No ground rocks, no particles
+- [ ] Eye is oversized (r=8 vs original 6)
+- [ ] Legs are thin sticks (stroke=3 vs original 6)
+- [ ] Cacti are plain rectangles with no arms
+- [ ] Clouds are flat rectangles
 
-| # | What Changed | Original | Reconstructed | Why |
-|---|-------------|----------|---------------|-----|
-| 1 | Dino body shape | Rounded (radius 8) | Angular (radius 3) | `cornerRadius` lost in obfuscation |
-| 2 | Squash-stretch | Subtle (15%/12%) | Exaggerated (35%/30%) | Multiplier constants stripped |
-| 3 | Eye size | Normal (r=6) | Bug-eyed (r=8) | AI over-estimated from decomp |
-| 4 | Eye count | One (side view) | Two (front view assumed) | AI inferred binocular vision |
-| 5 | Leg count | Two | Three | AI merged animation frames |
-| 6 | Tail direction | Curves down | Curves up | Sign flip in `a()` method |
-| 7 | Stitch marks | None | Purple stitches across body | Visual marker of reconstruction |
-| 8 | Frog DNA glow | None | Purple highlight pulse | Visual marker of gap-filling |
-| 9 | Cloud shape | Rounded | Square | `borderRadius` lost |
-| 10 | Ground rocks | Normal density | Dense + oversized | Modulo constant wrong |
-| 11 | Score speed | Normal (+0.1/frame) | 17% slower (+0.12 threshold) | Frame-rate constant guessed wrong |
-| 12 | Bird spawn | Score ≥ 50 | Score ≥ 30 | Threshold from obfuscated `b()` |
-| 13 | Color palette | True green/brown | Teal-shifted dino, lighter cacti | Hex constants truncated |
+**Verification — Tier 2 (Heuristic Analysis, 55%):**
+- [ ] Dino body is now **rounded but angular** (r=4, original is 8)
+- [ ] Squash/stretch is **exaggerated** — dino wobbles like jelly on jump/land
+- [ ] Tail is a **straight line pointing UP** (wrong — original curves down)
+- [ ] Spines are **rectangles** sticking up (should be triangles)
+- [ ] Day/night cycle **toggles instantly** between light and dark (no gradient)
+- [ ] Stars **flicker randomly** each frame (should be fixed positions)
+- [ ] Mountains appear but are **static** (no parallax scroll)
+- [ ] Ground rocks are **too dense and oversized** (mod 4, base 3 vs original mod 7, base 1)
+- [ ] Score timer drifts to 0.11s, birds spawn at 45 instead of 50
+
+**Verification — Tier 3 (Neural Inference, 72% — closest to original):**
+- [ ] Dino body is **well-rounded** (r=7, close to original 8)
+- [ ] Squash/stretch is **subtle** (0.17/0.13, close to original 0.15/0.12)
+- [ ] Tail is a **bezier curve going DOWN** (correct direction!)
+- [ ] Spines are **triangles** (correct shape, 5 instead of original 4)
+- [ ] Sky has **smooth gradient transitions** (correct 500pt cycle)
+- [ ] Stars are at **fixed positions** (deterministic, not flickering)
+- [ ] Mountains have **parallax scroll** (closer mountains move faster)
+- [ ] **Brown dust particles** appear on landing (circles with gravity — correct!)
+- [ ] Clouds are **rounded multi-blob shapes** (not rectangles)
+- [ ] Ground rocks correct density (mod 7)
+- [ ] Eye r=6 (correct!), leg stroke=6 (correct!), score 0.1s (correct!)
+- [ ] Bird has a small **beak triangle**, cactus has **asymmetric arms**
+- [ ] Still missing: combo system, breathing, blink, mouth, nostril, grass tufts
 
 ---
 
@@ -208,18 +234,29 @@ npm run demo:web
 
 | Button | What It Does |
 |--------|-------------|
+| **Pipeline** | Step through Original → Decompiled → Reconstructed with tier selector |
 | **Side by Side** | Both games running simultaneously in split view |
-| **Original Only** | Full-width original game |
-| **Reconstructed Only** | Full-width reconstructed game |
-| **Difference Table** | Shows the 13 frog-DNA differences with explanations |
+| **Show Your Work** | Cards showing what each tier adds/fixes/breaks |
+| **Obfuscation Map** | Before/after code comparison showing what ProGuard does |
+| **Difference Table** | 6-column table: Original, Decompiled, Tier 1, Tier 2, Tier 3 |
 
-### 3.3 — Comparison Verification
+### 3.3 — Tier Selector Verification
+
+When "AI Reconstructed" is selected in Pipeline view:
+- [ ] Tier selector appears with 3 buttons: "Tier 1 — AST Matching", "Tier 2 — Heuristic", "Tier 3 — Neural"
+- [ ] Clicking each tier loads a visibly different version of the game
+- [ ] Fidelity bar updates: 30% (amber) → 55% (purple) → 72% (green)
+- [ ] Tier 1 → Tier 2 is an obvious visual jump (rectangle→rounded, stiff→bouncy, bare→decorated)
+- [ ] Tier 2 → Tier 3 is another obvious jump (tail flips down, sky gets gradient, parallax appears)
+
+### 3.4 — Comparison Verification
 
 - [ ] Both games run independently (play one while the other idles)
-- [ ] Visual differences are immediately apparent (stitch marks, extra eye, wrong tail)
-- [ ] Gameplay differences emerge over time (birds appear earlier, score is slower)
+- [ ] Visual differences are immediately apparent at all tiers
+- [ ] Gameplay differences emerge over time (birds appear earlier in T2, score slower in T2)
 - [ ] Switching between views works without losing game state
-- [ ] Difference table is readable and matches what you see in-game
+- [ ] Show Your Work cards describe AI methods used per tier
+- [ ] Difference table shows T3 column with mostly ✓ marks (closest to original)
 
 ### 3.4 — CLI Comparison Report
 
