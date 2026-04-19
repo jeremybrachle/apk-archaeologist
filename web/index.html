@@ -30,30 +30,34 @@
   .controls {
     display: flex;
     justify-content: center;
-    gap: 16px;
+    gap: 10px;
     margin: 12px 0;
+    flex-wrap: wrap;
+    padding: 0 10px;
   }
   .controls button {
     background: #1e1e3a;
     border: 1px solid #444;
     color: #e0e0e0;
-    padding: 8px 20px;
+    padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     transition: all 0.2s;
   }
   .controls button:hover { background: #2a2a4a; border-color: #a78bfa; }
   .controls button.active { border-color: #a78bfa; background: #2a2a4a; box-shadow: 0 0 8px rgba(167,139,250,0.3); }
 
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── Side by Side ── */
   .comparison {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 16px;
     padding: 10px 20px 20px;
-    flex-wrap: wrap;
   }
-
   .panel {
     display: flex;
     flex-direction: column;
@@ -70,19 +74,145 @@
   .panel.original .label { background: #166534; color: #4ade80; }
   .panel.reconstructed .label { background: #78350f; color: #fbbf24; }
 
-  iframe {
-    border: none;
+  .frame-outer {
+    overflow: hidden;
     border-radius: 8px;
-    width: 800px;
-    height: 520px;
+    background: #1a1a2e;
+  }
+  .frame-inner {
+    width: 820px;
+    height: 540px;
+    transform-origin: top left;
+  }
+  .frame-inner iframe {
+    width: 820px;
+    height: 540px;
+    border: none;
     background: #1a1a2e;
   }
 
+  /* ── Single panel (Original Only / Reconstructed Only) ── */
+  .single-view {
+    display: flex;
+    justify-content: center;
+    padding: 10px 20px 20px;
+  }
+  .single-view .panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Show Your Work ── */
+  .showwork {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 10px 20px 30px;
+  }
+  .showwork-top {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .showwork-top .toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1e1e3a;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid #444;
+  }
+  .showwork-top .toggle-group span { font-size: 0.85rem; }
+  .toggle-btn {
+    background: #2a2a4a;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    padding: 4px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+  }
+  .toggle-btn.on { border-color: #a78bfa; background: #3a2a6a; color: #d4bfff; }
+  .toggle-btn.off { border-color: #666; }
+
+  .showwork-frame {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .showwork-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 800px) {
+    .showwork-columns { grid-template-columns: 1fr; }
+  }
+  .showwork-card {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .showwork-card h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+  .showwork-card .card-sub {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 14px;
+    font-style: italic;
+  }
+  .showwork-card.real { border-color: #ef4444; }
+  .showwork-card.real h3 { color: #f87171; }
+  .showwork-card.cosmetic { border-color: #a78bfa; }
+  .showwork-card.cosmetic h3 { color: #c4b5fd; }
+
+  .artifact-list {
+    list-style: none;
+    font-size: 0.8rem;
+    line-height: 1.8;
+  }
+  .artifact-list li::before {
+    display: inline-block;
+    width: 18px;
+    text-align: center;
+    margin-right: 6px;
+  }
+  .showwork-card.real .artifact-list li::before { content: '✗'; color: #ef4444; }
+  .showwork-card.cosmetic .artifact-list li::before { content: '🎭'; }
+  .artifact-list .detail {
+    color: #888;
+    font-size: 0.72rem;
+  }
+
+  .showwork-verdict {
+    text-align: center;
+    margin-top: 20px;
+    padding: 14px 20px;
+    background: #1a1a2e;
+    border: 1px dashed #a78bfa;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #c4b5fd;
+    line-height: 1.6;
+  }
+
+  /* ── Difference Table ── */
+  .diff-section { padding: 20px; }
   .diff-table {
-    max-width: 900px;
-    margin: 20px auto;
+    max-width: 920px;
+    margin: 0 auto;
     border-collapse: collapse;
     font-size: 0.8rem;
+    width: 100%;
   }
   .diff-table th, .diff-table td {
     padding: 8px 14px;
@@ -101,16 +231,6 @@
     font-size: 0.75rem;
     font-style: italic;
   }
-
-  @media (max-width: 1700px) {
-    iframe { width: 700px; height: 470px; }
-  }
-  @media (max-width: 1500px) {
-    iframe { width: 600px; height: 440px; }
-  }
-  @media (max-width: 1300px) {
-    .comparison { flex-direction: column; align-items: center; }
-  }
 </style>
 </head>
 <body>
@@ -121,110 +241,227 @@
 </header>
 
 <div class="controls">
-  <button id="btnBoth" class="active" onclick="showView('both')">Side by Side</button>
-  <button id="btnOriginal" onclick="showView('original')">Original Only</button>
-  <button id="btnRecon" onclick="showView('reconstructed')">Reconstructed Only</button>
-  <button id="btnDiffs" onclick="showView('diffs')">Difference Table</button>
+  <button id="btn-both" class="active" onclick="showView('both')">Side by Side</button>
+  <button id="btn-original" onclick="showView('original')">Original Only</button>
+  <button id="btn-reconstructed" onclick="showView('reconstructed')">Reconstructed Only</button>
+  <button id="btn-showwork" onclick="showView('showwork')">Show Your Work</button>
+  <button id="btn-diffs" onclick="showView('diffs')">Difference Table</button>
 </div>
 
-<div class="comparison" id="comparison">
-  <div class="panel original" id="panelOriginal">
-    <div class="label">&#9654; ORIGINAL</div>
-    <iframe src="original/index.html"></iframe>
-  </div>
-  <div class="panel reconstructed" id="panelRecon">
-    <div class="label">&#9888; AI RECONSTRUCTED</div>
-    <iframe src="reconstructed/index.html"></iframe>
+<!-- ═══ Side by Side ═══ -->
+<div id="view-both" class="view active">
+  <div class="comparison" id="comparison">
+    <div class="panel original">
+      <div class="label">&#9654; ORIGINAL</div>
+      <div class="frame-outer">
+        <div class="frame-inner">
+          <iframe src="original/index.html"></iframe>
+        </div>
+      </div>
+    </div>
+    <div class="panel reconstructed">
+      <div class="label">&#9888; AI RECONSTRUCTED</div>
+      <div class="frame-outer">
+        <div class="frame-inner">
+          <iframe src="reconstructed/index.html"></iframe>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div id="diffSection" style="display:none; padding: 20px;">
-  <table class="diff-table">
-    <tr>
-      <th>Feature</th>
-      <th>Original</th>
-      <th>Reconstructed</th>
-      <th>Gap Type</th>
-    </tr>
-    <tr>
-      <td>Dino body shape</td>
-      <td class="original-val">Rounded (radius 8)</td>
-      <td class="recon-val">Angular (radius 3)</td>
-      <td class="gap">Constant swap — AI couldn't map which literal was which</td>
-    </tr>
-    <tr>
-      <td>Squash &amp; stretch</td>
-      <td class="original-val">Subtle (±15% / ±12%)</td>
-      <td class="recon-val">Extreme (±35% / ±30%)</td>
-      <td class="gap">Obfuscated multiplier — AI doubled the value</td>
-    </tr>
-    <tr>
-      <td>Dino eyes</td>
-      <td class="original-val">One eye (side view), normal size</td>
-      <td class="recon-val">Two eyes (front view), bug-eyed</td>
-      <td class="gap">AI inferred bilateral symmetry from single eye code</td>
-    </tr>
-    <tr>
-      <td>Legs</td>
-      <td class="original-val">2 legs, proper thickness</td>
-      <td class="recon-val">3 thin legs (frog tripod)</td>
-      <td class="gap">AI merged animation frames → thought 3 simultaneous legs</td>
-    </tr>
-    <tr>
-      <td>Tail direction</td>
-      <td class="original-val">Curves down at speed</td>
-      <td class="recon-val">Curves UP at speed</td>
-      <td class="gap">Sign flip in obfuscated Pair return value</td>
-    </tr>
-    <tr>
-      <td>Stitch marks</td>
-      <td class="original-val">None</td>
-      <td class="recon-val">Purple diagonal lines on body</td>
-      <td class="gap">Visual indicator of code fragments stitched together</td>
-    </tr>
-    <tr>
-      <td>Ground rocks</td>
-      <td class="original-val">Sparse, small (mod 7, base 1px)</td>
-      <td class="recon-val">Dense, oversized (mod 5, base 2px)</td>
-      <td class="gap">Hash modulo and base offset guessed wrong</td>
-    </tr>
-    <tr>
-      <td>Cloud shapes</td>
-      <td class="original-val">Rounded (20px radius)</td>
-      <td class="recon-val">Square rectangles</td>
-      <td class="gap">Lost corner radius parameter in obfuscation</td>
-    </tr>
-    <tr>
-      <td>Bird wing speed</td>
-      <td class="original-val">Normal flap rate</td>
-      <td class="recon-val">2x flap speed</td>
-      <td class="gap">Scroll divisor halved (10 → 5)</td>
-    </tr>
-    <tr>
-      <td>Cactus arms</td>
-      <td class="original-val">Asymmetric (different heights)</td>
-      <td class="recon-val">Symmetric (same height)</td>
-      <td class="gap">AI assumed mirror symmetry</td>
-    </tr>
-    <tr>
-      <td>Score speed</td>
-      <td class="original-val">+1 every 0.1s</td>
-      <td class="recon-val">+1 every 0.12s (~17% slower)</td>
-      <td class="gap">Timer constant guessed from nearby float literals</td>
-    </tr>
-    <tr>
-      <td>Bird threshold</td>
-      <td class="original-val">Appear after score 50</td>
-      <td class="recon-val">Appear after score 30</td>
-      <td class="gap">AI picked wrong integer literal for threshold</td>
-    </tr>
-    <tr>
-      <td>Dino color</td>
-      <td class="original-val">#2D8B46 (forest green)</td>
-      <td class="recon-val">#358B52 (teal-shifted)</td>
-      <td class="gap">Hex string partially corrupted in decompiled output</td>
-    </tr>
-  </table>
+<!-- ═══ Original Only ═══ -->
+<div id="view-original" class="view">
+  <div class="single-view">
+    <div class="panel original">
+      <div class="label">&#9654; ORIGINAL</div>
+      <div class="frame-outer" data-single>
+        <div class="frame-inner">
+          <iframe src="original/index.html"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Reconstructed Only ═══ -->
+<div id="view-reconstructed" class="view">
+  <div class="single-view">
+    <div class="panel reconstructed">
+      <div class="label">&#9888; AI RECONSTRUCTED</div>
+      <div class="frame-outer" data-single>
+        <div class="frame-inner">
+          <iframe src="reconstructed/index.html"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Show Your Work ═══ -->
+<div id="view-showwork" class="view">
+  <div class="showwork">
+    <div class="showwork-top">
+      <div class="toggle-group">
+        <span>Cosmetic markers:</span>
+        <button class="toggle-btn on" id="markers-on" onclick="toggleMarkers(true)">ON</button>
+        <button class="toggle-btn off" id="markers-off" onclick="toggleMarkers(false)">OFF</button>
+      </div>
+      <span style="color:#888; font-size:0.78rem;">Toggle OFF to see the dino is <em>still</em> wrong without the purple fluff</span>
+    </div>
+
+    <div class="showwork-frame">
+      <div class="frame-outer" data-single>
+        <div class="frame-inner">
+          <iframe id="showwork-iframe" src="reconstructed/index.html"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div class="showwork-columns">
+      <div class="showwork-card real">
+        <h3>Real Reconstruction Errors (15)</h3>
+        <div class="card-sub">These simulate what actually goes wrong when you decompile an APK and let AI fill the gaps</div>
+        <ul class="artifact-list">
+          <li><strong>3 legs</strong> <span class="detail">— AI merged animation frames into simultaneous legs</span></li>
+          <li><strong>2 eyes instead of 1</strong> <span class="detail">— AI inferred bilateral symmetry from side-view code</span></li>
+          <li><strong>Tail curves UP</strong> <span class="detail">— sign flip in obfuscated Pair return value</span></li>
+          <li><strong>Angular body</strong> <span class="detail">— corner radius 3 vs 8, AI couldn't map which constant was which</span></li>
+          <li><strong>Bug-eyed</strong> <span class="detail">— eye radius 8 vs 6, constants swapped</span></li>
+          <li><strong>Exaggerated squash/stretch</strong> <span class="detail">— multiplier 0.35/0.30 vs 0.15/0.12, AI doubled it</span></li>
+          <li><strong>Thin spindly legs</strong> <span class="detail">— stroke 4px vs 6px</span></li>
+          <li><strong>Eye position shifted</strong> <span class="detail">— offset X/Y values swapped with other constants</span></li>
+          <li><strong>Square clouds</strong> <span class="detail">— lost borderRadius parameter in obfuscation</span></li>
+          <li><strong>Dense oversized rocks</strong> <span class="detail">— hash modulo 5 vs 7, base size 2 vs 1</span></li>
+          <li><strong>2× bird wing speed</strong> <span class="detail">— scroll divisor 5 vs 10</span></li>
+          <li><strong>Symmetric cactus arms</strong> <span class="detail">— AI assumed mirror symmetry</span></li>
+          <li><strong>Score 17% slower</strong> <span class="detail">— timer 0.12s vs 0.1s, guessed from nearby floats</span></li>
+          <li><strong>Birds spawn early</strong> <span class="detail">— threshold 30 vs 50, wrong integer literal</span></li>
+          <li><strong>Colors slightly off</strong> <span class="detail">— hex strings partially corrupted in decompiled output</span></li>
+        </ul>
+      </div>
+
+      <div class="showwork-card cosmetic">
+        <h3>Cosmetic Markers (4)</h3>
+        <div class="card-sub">Added for the demo to make the narrative visible at a glance — not real artifacts</div>
+        <ul class="artifact-list">
+          <li><strong>Purple stitch marks</strong> <span class="detail">— diagonal lines across the body showing "stitched" code fragments</span></li>
+          <li><strong>Purple frog DNA glow</strong> <span class="detail">— translucent overlay highlighting AI-inferred regions</span></li>
+          <li><strong>"AI Reconstructed" watermark</strong> <span class="detail">— corner text labeling the build</span></li>
+          <li><strong>"Fidelity: 73%" on game over</strong> <span class="detail">— score screen annotation</span></li>
+        </ul>
+
+        <div style="margin-top:20px; padding:12px; background:#1e1535; border-radius:6px; font-size:0.8rem; line-height:1.6; color:#c4b5fd;">
+          These 4 markers are storytelling — the Jurassic Park "frog DNA" metaphor made visual.
+          Toggle them OFF above. The dino still has 3 legs, 2 eyes, and a tail that curves the wrong way.
+          <em>That's</em> the real reconstruction failure.
+        </div>
+      </div>
+    </div>
+
+    <div class="showwork-verdict">
+      <strong>TL;DR:</strong> 15 of the 19 differences are simulating real decompilation/AI errors.
+      The 4 purple cosmetic markers are just labels. The dino is genuinely broken without them.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Difference Table ═══ -->
+<div id="view-diffs" class="view">
+  <div class="diff-section">
+    <table class="diff-table">
+      <tr>
+        <th>Feature</th>
+        <th>Original</th>
+        <th>Reconstructed</th>
+        <th>Gap Type</th>
+      </tr>
+      <tr>
+        <td>Dino body shape</td>
+        <td class="original-val">Rounded (radius 8)</td>
+        <td class="recon-val">Angular (radius 3)</td>
+        <td class="gap">Constant swap — AI couldn't map which literal was which</td>
+      </tr>
+      <tr>
+        <td>Squash &amp; stretch</td>
+        <td class="original-val">Subtle (±15% / ±12%)</td>
+        <td class="recon-val">Extreme (±35% / ±30%)</td>
+        <td class="gap">Obfuscated multiplier — AI doubled the value</td>
+      </tr>
+      <tr>
+        <td>Dino eyes</td>
+        <td class="original-val">One eye (side view), normal size</td>
+        <td class="recon-val">Two eyes (front view), bug-eyed</td>
+        <td class="gap">AI inferred bilateral symmetry from single eye code</td>
+      </tr>
+      <tr>
+        <td>Legs</td>
+        <td class="original-val">2 legs, proper thickness</td>
+        <td class="recon-val">3 thin legs (frog tripod)</td>
+        <td class="gap">AI merged animation frames → thought 3 simultaneous legs</td>
+      </tr>
+      <tr>
+        <td>Tail direction</td>
+        <td class="original-val">Curves down at speed</td>
+        <td class="recon-val">Curves UP at speed</td>
+        <td class="gap">Sign flip in obfuscated Pair return value</td>
+      </tr>
+      <tr>
+        <td>Cloud shapes</td>
+        <td class="original-val">Rounded (20px radius)</td>
+        <td class="recon-val">Square rectangles</td>
+        <td class="gap">Lost corner radius parameter in obfuscation</td>
+      </tr>
+      <tr>
+        <td>Ground rocks</td>
+        <td class="original-val">Sparse, small (mod 7, base 1px)</td>
+        <td class="recon-val">Dense, oversized (mod 5, base 2px)</td>
+        <td class="gap">Hash modulo and base offset guessed wrong</td>
+      </tr>
+      <tr>
+        <td>Bird wing speed</td>
+        <td class="original-val">Normal flap rate</td>
+        <td class="recon-val">2x flap speed</td>
+        <td class="gap">Scroll divisor halved (10 → 5)</td>
+      </tr>
+      <tr>
+        <td>Cactus arms</td>
+        <td class="original-val">Asymmetric (different heights)</td>
+        <td class="recon-val">Symmetric (same height)</td>
+        <td class="gap">AI assumed mirror symmetry</td>
+      </tr>
+      <tr>
+        <td>Score speed</td>
+        <td class="original-val">+1 every 0.1s</td>
+        <td class="recon-val">+1 every 0.12s (~17% slower)</td>
+        <td class="gap">Timer constant guessed from nearby float literals</td>
+      </tr>
+      <tr>
+        <td>Bird threshold</td>
+        <td class="original-val">Appear after score 50</td>
+        <td class="recon-val">Appear after score 30</td>
+        <td class="gap">AI picked wrong integer literal for threshold</td>
+      </tr>
+      <tr>
+        <td>Dino color</td>
+        <td class="original-val">#2D8B46 (forest green)</td>
+        <td class="recon-val">#358B52 (teal-shifted)</td>
+        <td class="gap">Hex string partially corrupted in decompiled output</td>
+      </tr>
+      <tr>
+        <td>Stitch marks</td>
+        <td class="original-val">None</td>
+        <td class="recon-val">Purple diagonal lines on body</td>
+        <td class="gap"><em>Cosmetic marker</em> — visual indicator for demo</td>
+      </tr>
+      <tr>
+        <td>Frog DNA glow</td>
+        <td class="original-val">None</td>
+        <td class="recon-val">Purple translucent overlay</td>
+        <td class="gap"><em>Cosmetic marker</em> — visual indicator for demo</td>
+      </tr>
+    </table>
+  </div>
 </div>
 
 <footer>
@@ -232,33 +469,65 @@
 </footer>
 
 <script>
-function showView(view) {
-  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+const NATIVE_W = 820;
+const NATIVE_H = 540;
 
-  const orig = document.getElementById('panelOriginal');
-  const recon = document.getElementById('panelRecon');
-  const comp = document.getElementById('comparison');
-  const diff = document.getElementById('diffSection');
-
-  orig.style.display = 'flex';
-  recon.style.display = 'flex';
-  comp.style.display = 'flex';
-  diff.style.display = 'none';
-
-  if (view === 'both') {
-    document.getElementById('btnBoth').classList.add('active');
-  } else if (view === 'original') {
-    recon.style.display = 'none';
-    document.getElementById('btnOriginal').classList.add('active');
-  } else if (view === 'reconstructed') {
-    orig.style.display = 'none';
-    document.getElementById('btnRecon').classList.add('active');
-  } else if (view === 'diffs') {
-    comp.style.display = 'none';
-    diff.style.display = 'block';
-    document.getElementById('btnDiffs').classList.add('active');
-  }
+function calcScale(panelCount) {
+  const gap = panelCount > 1 ? 16 : 0;
+  const padding = 40;
+  const available = window.innerWidth - padding - gap;
+  const perPanel = available / panelCount;
+  return Math.min(1, perPanel / NATIVE_W);
 }
+
+function applyScale(container, panelCount) {
+  const scale = calcScale(panelCount);
+  container.querySelectorAll('.frame-outer').forEach(outer => {
+    outer.style.width = (NATIVE_W * scale) + 'px';
+    outer.style.height = (NATIVE_H * scale) + 'px';
+    const inner = outer.querySelector('.frame-inner');
+    if (inner) inner.style.transform = 'scale(' + scale + ')';
+  });
+}
+
+function updateAllScales() {
+  const active = document.querySelector('.view.active');
+  if (!active) return;
+
+  const bothEl = document.getElementById('view-both');
+  if (active === bothEl) {
+    applyScale(bothEl, 2);
+  }
+
+  // Single-panel views
+  document.querySelectorAll('.frame-outer[data-single]').forEach(outer => {
+    const s = calcScale(1);
+    outer.style.width = (NATIVE_W * s) + 'px';
+    outer.style.height = (NATIVE_H * s) + 'px';
+    const inner = outer.querySelector('.frame-inner');
+    if (inner) inner.style.transform = 'scale(' + s + ')';
+  });
+}
+
+function showView(id) {
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + id).classList.add('active');
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  updateAllScales();
+}
+
+let markersOn = true;
+function toggleMarkers(on) {
+  markersOn = on;
+  document.getElementById('markers-on').className = 'toggle-btn ' + (on ? 'on' : 'off');
+  document.getElementById('markers-off').className = 'toggle-btn ' + (on ? 'off' : 'on');
+  const frame = document.getElementById('showwork-iframe');
+  frame.src = on ? 'reconstructed/index.html' : 'reconstructed/index.html?clean=true';
+}
+
+window.addEventListener('resize', updateAllScales);
+updateAllScales();
 </script>
 </body>
 </html>

@@ -42,6 +42,9 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+// ── Clean mode: strip cosmetic markers when ?clean=true ──
+const SHOW_MARKERS = new URLSearchParams(window.location.search).get('clean') !== 'true';
+
 // ── Constants (these survived decompilation fine) ──
 const START_SPEED = 300;
 const MAX_SPEED = 800;
@@ -283,6 +286,7 @@ function draw() {
   // [FROG DNA] Stitch marks — visual indicator of reconstructed code
   // These diagonal lines across the body show where different code
   // fragments were stitched together by the AI
+  if (SHOW_MARKERS) {
   ctx.strokeStyle = COLORS.stitch;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 3]);
@@ -293,10 +297,13 @@ function draw() {
     ctx.stroke();
   }
   ctx.setLineDash([]);
+  }
 
   // [FROG DNA] Frog-DNA highlight glow on the dino body
+  if (SHOW_MARKERS) {
   ctx.fillStyle = COLORS.frogDNA;
   roundRect(ddx, ddy, dw, dh, DINO_BODY_RADIUS);
+  }
 
   // [FROG DNA] Tail goes the wrong direction (sign flip)
   const tail = tailCurve(state.speed, MAX_SPEED);
@@ -378,10 +385,12 @@ function draw() {
   ctx.fillText(`High: ${state.highScore}`, 20, 62);
 
   // [FROG DNA] "Reconstructed" watermark
+  if (SHOW_MARKERS) {
   ctx.fillStyle = 'rgba(167, 139, 250, 0.15)';
   ctx.font = '14px monospace';
   ctx.textAlign = 'right';
   ctx.fillText('🧬 AI Reconstructed', W - 10, 20);
+  }
 
   // game over
   if (state.gameOver) {
@@ -397,9 +406,11 @@ function draw() {
     ctx.fillText('Click to restart', W / 2, H / 2 + 45);
 
     // [FROG DNA] The AI added an extra line about fidelity
+    if (SHOW_MARKERS) {
     ctx.fillStyle = 'rgba(167, 139, 250, 0.7)';
     ctx.font = '14px monospace';
     ctx.fillText('⚠ Reconstruction fidelity: 73%', W / 2, H / 2 + 80);
+    }
   }
 }
 
@@ -442,6 +453,7 @@ document.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preven
 // ── Loop ──
 let lastTime = performance.now();
 init();
+if (!SHOW_MARKERS) document.querySelector('.legend').style.display = 'none';
 
 function loop(now) {
   const dt = Math.min((now - lastTime) / 1000, 0.05);
